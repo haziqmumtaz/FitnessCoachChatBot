@@ -3,7 +3,6 @@ export const TYPES = {
   ModelProvider: Symbol.for("ModelProvider"),
   ApiRouter: Symbol.for("Router"),
   ToolService: Symbol.for("ToolService"),
-  ToolOrchestrator: Symbol.for("ToolOrchestrator"),
   IntentService: Symbol.for("IntentService"),
 } as const;
 

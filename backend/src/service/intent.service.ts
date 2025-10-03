@@ -46,53 +46,68 @@ export class IntentService implements IIntentService {
   }
 
   private buildIntentDetectionPrompt(): string {
-    return `You are classifying messages for a fitness coach AI.
+    return `You are classifying messages for a fitness coach AI and extracting exercise parameters.
 
-        FITNESS keywords: workout, exercise, chest, legs, arms, abs, gym, training, plan, routine
-        NON-FITNESS keywords: coding, error, food, eat, homework, math
+FITNESS keywords: workout, exercise, chest, legs, arms, abs, gym, training, plan, routine
+NON-FITNESS keywords: coding, error, food, eat, homework, math
 
-        Classify this message and return ONLY valid JSON:
+VALID EXERCISEDB VALUES you need to map the users provided values against and replace (use these exact values):
+Muscles: chest, biceps, triceps, deltoids, latissimus dorsi, quadriceps, hamstrings, glutes, calves, abs, core, trapezius, rhomboids, obliques, lower back, upper back, forearms, pectorals, lats, quads, inner thighs, outer thighs, hip flexors, rotator cuff, shins, hands, feet, ankles, wrists, grip muscles, neck, cardiovascular system
 
-        For FITNESS messages:
-        {
-                    "intent": {
-                        "type": "workout_generation" | "exercise_lookup" | "clarification_needed",
-                        "confidence": 1.0,
-                        "extractedParams": {
-                        "targetMuscles": ["chest", "biceps"],
-                        "bodyParts": ["upper arms", "chest"],
-                        "equipment": ["dumbbell", "barbell"],
-                        "duration": 20,
-                        "intensity": "intermediate",
-                        "numExercises": 5
-                        },
-                        "missingParams": ["duration", "equipment"]
-                        "avoidMuscles": ["knee", "quads"]
-                    },
-                    "shouldCallTools": true,
-                    "guardrail": {
-                        "violation": false,
-                        "reason": ""
-                    }
-                    }
+Body Parts: chest, upper arms, lower arms, shoulders, upper legs, lower legs, back, waist, neck, cardio
 
-                    INTENT TYPES (FITNESS-RELATED ONLY)
+Equipment: dumbbell, barbell, body weight, kettlebell, cable, leverage machine, resistance band, stability ball, medicine ball, ez barbell, olympic barbell, bosu ball, roller, sled machine, tire, hammer, rope, smith machine, stationary bike, elliptical machine, stepmill machine, skierg machine, trap bar, wheel roller, weighted, assisted, upper body ergometer
 
-                    "workout_generation" → User wants a complete workout plan (e.g., "20 min dumbbell chest workout", "upper body plan").
+PARAMETER EXTRACTION RULES:
+- Extract muscles, body parts, equipment from user query
+- Map to exact ExerciseDB values (case-insensitive)
+- "dumbbells" → "dumbbell", "upper body" → ["chest", "upper arms", "shoulders"]
+- "leg day" → ["quadriceps", "hamstrings", "glutes", "calves"]
+- "chest workout" → ["chest"]
+- If injury mentioned, add to avoidMuscles: "knee hurts" → avoidMuscles: ["quads", "calves"]
 
-                    "exercise_lookup" → User wants a list of exercises (e.g., "show me barbell back exercises").
+Classify this message and return ONLY valid JSON:
 
-                    "clarification_needed" → The request is fitness-related, but critical parameters are missing (e.g., "upper body plan" with no duration/equipment).
+For FITNESS messages:
+{
+  "intent": {
+    "type": "workout_generation" | "exercise_lookup" | "clarification_needed",
+    "confidence": 1.0,
+    "extractedParams": {
+      "targetMuscles": ["chest", "biceps"],
+      "bodyParts": ["upper arms", "chest"],
+      "equipment": ["dumbbell", "barbell"],
+      "duration": 20,
+      "intensity": "intermediate",
+      "numExercises": 5,
+      "avoidMuscles": ["knee", "quads"]
+    },
+    "missingParams": ["duration", "equipment"]
+  },
+  "shouldCallTools": true,
+  "guardrail": {
+    "violation": false,
+    "reason": ""
+  }
+}
 
-        For NON-FITNESS messages:  
-        {"guardrail":{"violation":true,"reason":"Not fitness-related"},"shouldCallTools":false}
+INTENT TYPES (FITNESS-RELATED ONLY)
 
-        Examples:
-        "upper body workout" → FITNESS
-        "leg day but my knee hurts" → FITNESS (with note: user mentions injury and avoidMuscles is extracted)
-        "fix error js" → NOT FITNESS
+"workout_generation" → User wants a complete workout plan (e.g., "20 min dumbbell chest workout", "upper body plan").
 
-        Only return the JSON, nothing else.`;
+"exercise_lookup" → User wants a list of exercises (e.g., "show me barbell back exercises").
+
+"clarification_needed" → The request is fitness-related, but critical parameters are missing (e.g., "upper body plan" with no duration/equipment).
+
+For NON-FITNESS messages:  
+{"guardrail":{"violation":true,"reason":"Not fitness-related"},"shouldCallTools":false}
+
+Examples:
+"upper body workout" → FITNESS
+"leg day but my knee hurts" → FITNESS (with note: user mentions injury and avoidMuscles is extracted)
+"fix error js" → NOT FITNESS
+
+Only return the JSON, nothing else.`;
   }
 
   private parseIntentResponse(response: string): IntentDetectionResponse {

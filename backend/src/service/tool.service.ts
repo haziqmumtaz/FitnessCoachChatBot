@@ -1,54 +1,32 @@
 import axios from "axios";
 import { ExerciseDBExercise, ExerciseDBResponse } from "../types/chat";
 import config from "../config";
-import {
-  validateAndMapMuscles,
-  validateAndMapEquipment,
-  validateAndMapBodyParts,
-} from "../constants/exercisedb";
 
 export class ToolService {
   private readonly exerciseDBBaseURL = "https://www.exercisedb.dev/api/v1";
 
   /**
-   * Get filtered exercises using the ExerciseDB filter endpoint
-   * Example: /api/v1/exercises/filter?offset=0&limit=10&search=chest%20workout&muscles=chest%2Ctriceps&equipment=dumbbell%2Cbarbell&bodyParts=upper%20arms%2Cchest&sortBy=name&sortOrder=desc
+   * Get exercises using ExerciseDB fuzzy search API
+   * Uses fuzzy matching across all fields (name, muscles, equipment, body parts)
    */
-  async getFilteredExercises(params: {
-    search?: string;
-    muscles?: string[];
-    bodyParts?: string[];
-    equipment?: string[];
+  async getFuzzySearchExercises(params: {
+    searchQuery: string;
     limit?: number;
     offset?: number;
+    threshold?: number;
   }): Promise<ExerciseDBResponse> {
     try {
       const queryParams: any = {
         offset: params.offset || 0,
-        limit: params.limit || 10,
-        sortBy: "name",
-        sortOrder: "asc",
+        limit: Math.min(params.limit || 10, 25), // API max is 25
+        q: params.searchQuery,
+        threshold: params.threshold || 0.7, // Default fuzzy threshold
       };
 
-      // Add optional filters
-      if (params.search) {
-        queryParams.search = params.search;
-      }
-
-      if (params.muscles && params.muscles.length > 0) {
-        queryParams.muscles = params.muscles.join(",");
-      }
-
-      if (params.bodyParts && params.bodyParts.length > 0) {
-        queryParams.bodyParts = params.bodyParts.join(",");
-      }
-
-      if (params.equipment && params.equipment.length > 0) {
-        queryParams.equipment = params.equipment.join(",");
-      }
+      console.log("queryparams", queryParams);
 
       const response = await axios.get(
-        `${this.exerciseDBBaseURL}/exercises/filter`,
+        `${this.exerciseDBBaseURL}/exercises/search`,
         {
           params: queryParams,
         }
@@ -56,7 +34,7 @@ export class ToolService {
 
       return response.data || {};
     } catch (error: any) {
-      console.error(`Error fetching filtered exercises:`, error.message);
+      console.error(`Error fetching fuzzy search exercises:`, error.message);
 
       return {
         success: false,
@@ -95,7 +73,8 @@ export class ToolService {
   }
 
   /**
-   * Generate workout exercises using the filter endpoint
+   * Generate workout exercises using fuzzy search
+   * Builds a search query from the provided parameters
    */
   async getWorkoutExercises(params: {
     targetMuscles?: string[];
@@ -105,33 +84,33 @@ export class ToolService {
     search?: string;
   }): Promise<ExerciseDBExercise[]> {
     try {
-      // Validate and map user input to ExerciseDB format
-      const muscles = params.targetMuscles
-        ? validateAndMapMuscles(params.targetMuscles)
-        : undefined;
+      // Build a comprehensive search query from all parameters
+      const searchTerms: string[] = [];
 
-      const bodyParts = params.bodyParts
-        ? validateAndMapBodyParts(params.bodyParts)
-        : undefined;
+      if (params.search) {
+        searchTerms.push(params.search);
+      }
 
-      const equipment = params.equipment
-        ? validateAndMapEquipment(params.equipment)
-        : undefined;
+      if (params.targetMuscles && params.targetMuscles.length > 0) {
+        searchTerms.push(...params.targetMuscles);
+      }
 
-      const exercises = await this.getFilteredExercises({
-        search: params.search,
-        muscles,
-        bodyParts,
-        equipment,
+      if (params.bodyParts && params.bodyParts.length > 0) {
+        searchTerms.push(...params.bodyParts);
+      }
+
+      if (params.equipment && params.equipment.length > 0) {
+        searchTerms.push(...params.equipment);
+      }
+
+      // Create a single search query
+      const searchQuery = searchTerms.join(" ");
+
+      const exercises = await this.getFuzzySearchExercises({
+        searchQuery: searchQuery,
         limit: params.numExercises || 8,
       });
 
-      console.log("Mapped parameters:", {
-        originalParams: params,
-        muscles,
-        bodyParts,
-        equipment,
-      });
       console.log("ExerciseDB response:", exercises.data.length);
 
       return exercises.data.slice(0, params.numExercises || 8);

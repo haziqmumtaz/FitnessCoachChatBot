@@ -27,7 +27,6 @@ interface ModelConfig {
 
 @injectable()
 export class ModelProvider implements IModelProvider {
-  private readonly openai: OpenAI;
   private readonly modelConfigs: Record<string, ModelConfig>;
 
   constructor() {
@@ -57,10 +56,6 @@ export class ModelProvider implements IModelProvider {
         apiKey: config.deepSeekApiKey || "",
       },
     };
-
-    this.openai = new OpenAI({
-      apiKey: config.groqApiKey || "dummy-key",
-    });
   }
 
   async chat(
@@ -78,65 +73,51 @@ export class ModelProvider implements IModelProvider {
       throw new Error(`API key not configured for model ${modelName}`);
     }
 
-    try {
-      const client = new OpenAI({
-        apiKey: modelConfig.apiKey,
-        baseURL: modelConfig.baseURL,
-      });
+    const client = new OpenAI({
+      apiKey: modelConfig.apiKey,
+      baseURL: modelConfig.baseURL,
+    });
 
-      const openaiMessages = messages.map((msg) => ({
-        role: msg.role as "system" | "user" | "assistant",
-        content: msg.content,
-      }));
+    const response = await client.chat.completions.create({
+      model: modelConfig.name,
+      messages: messages,
+      temperature: options?.temperature || 0.7,
+      max_tokens: options?.maxTokens || 1000,
+      stream: false,
+      tools: options?.tools,
+      tool_choice: options?.toolChoice,
+    });
 
-      const response = await client.chat.completions.create({
-        model: modelConfig.name,
-        messages: openaiMessages,
-        temperature: options?.temperature || 0.7,
-        max_tokens: options?.maxTokens || 1000,
-        stream: false,
-        tools: options?.tools,
-        tool_choice: options?.toolChoice,
-      });
-
-      const choice = response.choices[0];
-      if (!choice || !choice.message) {
-        throw new Error("No response from model");
-      }
-
-      // Extract tool calls if any
-      const toolCalls = choice.message.tool_calls?.map((toolCall) => ({
-        id: toolCall.id,
-        type: toolCall.type as "function",
-        function: {
-          name: (toolCall as any).function.name,
-          arguments: (toolCall as any).function.arguments,
-        },
-      }));
-
-      return {
-        content: choice.message.content || "",
-        model: modelConfig.name,
-        toolCalls: toolCalls,
-        usage: response.usage
-          ? {
-              promptTokens: response.usage.prompt_tokens,
-              completionTokens: response.usage.completion_tokens,
-              totalTokens: response.usage.total_tokens,
-            }
-          : undefined,
-      };
-    } catch (error: any) {
-      console.error(`Model ${modelName} error:`, error);
-      throw new Error(`Model ${modelName} error: ${error.message}`);
+    const choice = response.choices[0];
+    if (!choice || !choice.message) {
+      throw new Error("No response from model");
     }
+
+    // Extract tool calls if any
+    const toolCalls = choice.message.tool_calls?.map((toolCall) => ({
+      id: toolCall.id,
+      type: toolCall.type as "function",
+      function: {
+        name: (toolCall as any).function.name,
+        arguments: (toolCall as any).function.arguments,
+      },
+    }));
+
+    return {
+      content: choice.message.content || "",
+      model: modelConfig.name,
+      toolCalls: toolCalls,
+      usage: response.usage
+        ? {
+            promptTokens: response.usage.prompt_tokens,
+            completionTokens: response.usage.completion_tokens,
+            totalTokens: response.usage.total_tokens,
+          }
+        : undefined,
+    };
   }
 
   getAvailableModels(): string[] {
     return Object.keys(this.modelConfigs);
-  }
-
-  getModelInfo(modelName: string): ModelConfig | undefined {
-    return this.modelConfigs[modelName];
   }
 }

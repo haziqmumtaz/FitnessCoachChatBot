@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { chatApi } from "../api/chat";
-import type { ChatMessage, WorkoutPlan } from "../types/api";
+import type { ChatMessage, WorkoutPlan, DetailedExercise } from "../types/api";
 import MarkdownRenderer from "./MarkdownRenderer";
+import ExerciseCard from "./ExerciseCard";
 
 interface ChatInterfaceProps {
   className?: string;
@@ -10,9 +11,9 @@ interface ChatInterfaceProps {
 const WorkoutPlanCard = ({ workoutPlan }: { workoutPlan: WorkoutPlan }) => (
   <div
     style={{
-      background: "rgba(34, 197, 94, 0.1)",
-      border: "1px solid rgba(34, 197, 94, 0.2)",
-      borderRadius: "12px",
+      backgroundColor: "#f0fdf4",
+      border: "1px solid #bbf7d0",
+      borderRadius: "0.75rem",
       padding: "1rem",
       marginTop: "0.5rem",
     }}
@@ -26,9 +27,9 @@ const WorkoutPlanCard = ({ workoutPlan }: { workoutPlan: WorkoutPlan }) => (
     >
       <div
         style={{
-          width: "24px",
-          height: "24px",
-          background: "rgba(34, 197, 94, 0.2)",
+          width: "1.5rem",
+          height: "1.5rem",
+          backgroundColor: "#bbf7d0",
           borderRadius: "50%",
           display: "flex",
           alignItems: "center",
@@ -36,14 +37,12 @@ const WorkoutPlanCard = ({ workoutPlan }: { workoutPlan: WorkoutPlan }) => (
           marginRight: "0.5rem",
         }}
       >
-        <span style={{ fontSize: "12px", color: "rgba(34, 197, 94, 0.8)" }}>
-          💪
-        </span>
+        <span style={{ fontSize: "0.75rem", color: "#166534" }}>💪</span>
       </div>
       <h4
         style={{
           margin: 0,
-          color: "rgba(0, 0, 0, 0.9)",
+          color: "#111827",
           fontSize: "1rem",
           fontWeight: "600",
         }}
@@ -58,7 +57,7 @@ const WorkoutPlanCard = ({ workoutPlan }: { workoutPlan: WorkoutPlan }) => (
           display: "flex",
           gap: "0.5rem",
           fontSize: "0.875rem",
-          color: "rgba(0, 0, 0, 0.8)",
+          color: "#374151",
           marginBottom: "0.5rem",
         }}
       >
@@ -70,8 +69,8 @@ const WorkoutPlanCard = ({ workoutPlan }: { workoutPlan: WorkoutPlan }) => (
         style={{
           margin: 0,
           fontSize: "0.875rem",
-          color: "rgba(0, 0, 0, 0.7)",
-          lineHeight: 1.4,
+          color: "#4b5563",
+          lineHeight: "1.5",
         }}
       >
         {workoutPlan.instructions}
@@ -82,7 +81,7 @@ const WorkoutPlanCard = ({ workoutPlan }: { workoutPlan: WorkoutPlan }) => (
       <h5
         style={{
           margin: "0 0 0.5rem 0",
-          color: "rgba(0, 0, 0, 0.9)",
+          color: "#111827",
           fontSize: "0.875rem",
           fontWeight: "600",
         }}
@@ -93,8 +92,8 @@ const WorkoutPlanCard = ({ workoutPlan }: { workoutPlan: WorkoutPlan }) => (
         <div
           key={index}
           style={{
-            background: "rgba(255, 255, 255, 0.05)",
-            borderRadius: "8px",
+            backgroundColor: "rgba(255, 255, 255, 0.05)",
+            borderRadius: "0.5rem",
             padding: "0.75rem",
             marginBottom: "0.5rem",
             display: "flex",
@@ -103,14 +102,14 @@ const WorkoutPlanCard = ({ workoutPlan }: { workoutPlan: WorkoutPlan }) => (
         >
           <div
             style={{
-              minWidth: "32px",
-              height: "32px",
-              background: "rgba(34, 197, 94, 0.2)",
-              borderRadius: "6px",
+              minWidth: "2rem",
+              height: "2rem",
+              backgroundColor: "#bbf7d0",
+              borderRadius: "0.375rem",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "14px",
+              fontSize: "0.875rem",
             }}
           >
             {index + 1}
@@ -119,7 +118,7 @@ const WorkoutPlanCard = ({ workoutPlan }: { workoutPlan: WorkoutPlan }) => (
             <h6
               style={{
                 margin: "0 0 0.25rem 0",
-                color: "rgba(0, 0, 0, 0.9)",
+                color: "#111827",
                 fontSize: "0.875rem",
                 fontWeight: "600",
               }}
@@ -131,7 +130,7 @@ const WorkoutPlanCard = ({ workoutPlan }: { workoutPlan: WorkoutPlan }) => (
                 display: "flex",
                 gap: "1rem",
                 fontSize: "0.75rem",
-                color: "rgba(0, 0, 0, 0.7)",
+                color: "#4b5563",
                 marginBottom: "0.25rem",
               }}
             >
@@ -143,8 +142,8 @@ const WorkoutPlanCard = ({ workoutPlan }: { workoutPlan: WorkoutPlan }) => (
               style={{
                 margin: 0,
                 fontSize: "0.75rem",
-                color: "rgba(0, 0, 0, 0.6)",
-                lineHeight: 1.3,
+                color: "#6b7280",
+                lineHeight: "1.4",
               }}
             >
               {exercise.instructions}
@@ -234,7 +233,6 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
     const userMessage: ChatMessage = {
       role: "user",
       content: inputValue.trim(),
-      timestamp: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -257,7 +255,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
       const assistantMessage: ChatMessage = {
         role: "assistant",
         content: response.coachTalk,
-        timestamp: response.timestamp,
+        detailedExercises: response.detailedExercises,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -270,7 +268,6 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
             null,
             2
           )}`,
-          timestamp: response.timestamp,
         };
         setMessages((prev) => [...prev, workoutMessage]);
       }
@@ -283,7 +280,6 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
         role: "assistant",
         content:
           "Sorry, I'm having trouble processing your request. Please try again.",
-        timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -324,14 +320,14 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
     <div
       className={className}
       style={{
-        display: "flex",
-        flexDirection: "column",
         height: "100vh",
         width: "100vw",
-        backgroundColor: "#f5f5f5",
         margin: 0,
         padding: 0,
         overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: "#f5f5f5",
       }}
     >
       {/* Header */}
@@ -339,7 +335,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
         style={{
           padding: "1.5rem 2rem",
           backgroundColor: "white",
-          borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+          borderBottom: "1px solid #e5e5e5",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -352,10 +348,10 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
             <h1
               style={{
                 margin: 0,
-                color: "rgba(0, 0, 0, 0.9)",
                 fontSize: "1.5rem",
-                fontWeight: "700",
-                letterSpacing: "-0.2px",
+                fontWeight: "bold",
+                color: "#1a1a1a",
+                letterSpacing: "-0.025em",
               }}
             >
               FITNESS COACH AI
@@ -363,9 +359,9 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
             <p
               style={{
                 margin: 0,
-                color: "rgba(0, 0, 0, 0.6)",
                 fontSize: "0.875rem",
-                fontWeight: "400",
+                color: "#666666",
+                fontWeight: "normal",
               }}
             >
               Your personal training assistant
@@ -379,10 +375,10 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
             value={selectedModel}
             onChange={(e) => setSelectedModel(e.target.value)}
             style={{
-              background: "white",
-              border: "1px solid rgba(0, 0, 0, 0.15)",
-              borderRadius: "8px",
-              color: "rgba(0, 0, 0, 0.8)",
+              backgroundColor: "white",
+              border: "1px solid #d1d5db",
+              borderRadius: "0.5rem",
+              color: "#374151",
               padding: "0.5rem 0.75rem",
               fontSize: "0.875rem",
               cursor: "pointer",
@@ -399,24 +395,28 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
             onClick={clearChat}
             disabled={messages.length === 0}
             style={{
-              background:
-                messages.length === 0
-                  ? "rgba(0, 0, 0, 0.05)"
-                  : "rgba(255, 193, 7, 0.8)",
-              border: "none",
-              borderRadius: "8px",
-              color:
-                messages.length === 0
-                  ? "rgba(0, 0, 0, 0.3)"
-                  : "rgba(0, 0, 0, 0.8)",
               padding: "0.5rem 1rem",
+              borderRadius: "0.5rem",
               fontSize: "0.875rem",
               fontWeight: "500",
-              cursor: messages.length === 0 ? "not-allowed" : "pointer",
-              transition: "all 0.2s ease",
               display: "flex",
               alignItems: "center",
               gap: "0.5rem",
+              transition: "all 0.2s",
+              backgroundColor: messages.length === 0 ? "#f3f4f6" : "#fef3c7",
+              color: messages.length === 0 ? "#9ca3af" : "#374151",
+              border: "none",
+              cursor: messages.length === 0 ? "not-allowed" : "pointer",
+            }}
+            onMouseEnter={(e) => {
+              if (messages.length > 0) {
+                e.currentTarget.style.backgroundColor = "#fde68a";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (messages.length > 0) {
+                e.currentTarget.style.backgroundColor = "#fef3c7";
+              }
             }}
           >
             <span>↻</span>
@@ -553,19 +553,30 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                     ) : (
                       <MarkdownRenderer content={message.content} />
                     )}
+
+                    {/* Show detailed exercises regardless of workout plan */}
+                    {message.detailedExercises &&
+                      message.detailedExercises.length > 0 && (
+                        <div style={{ marginTop: "1rem" }}>
+                          <h4
+                            style={{
+                              margin: "0 0 0.75rem 0",
+                              fontSize: "1rem",
+                              fontWeight: "600",
+                              color: "rgba(0, 0, 0, 0.9)",
+                            }}
+                          >
+                            Exercise Details
+                          </h4>
+                          {message.detailedExercises.map((exercise, index) => (
+                            <ExerciseCard
+                              key={exercise.exerciseId || index}
+                              exercise={exercise}
+                            />
+                          ))}
+                        </div>
+                      )}
                   </div>
-                  {message.timestamp && (
-                    <div
-                      style={{
-                        color: "rgba(0, 0, 0, 0.4)",
-                        fontSize: "0.75rem",
-                        marginTop: "0.5rem",
-                        textAlign: "right",
-                      }}
-                    >
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </div>
-                  )}
                 </div>
               </div>
             );

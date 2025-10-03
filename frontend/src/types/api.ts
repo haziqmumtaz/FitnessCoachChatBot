@@ -2,7 +2,7 @@
 export type ChatMessage = {
   role: "user" | "assistant" | "system";
   content: string;
-  timestamp?: string;
+  detailedExercises?: DetailedExercise[];
 };
 
 export type WorkoutExercise = {
@@ -29,9 +29,24 @@ export type ChatRequest = {
   sessionId?: string;
 };
 
+export type DetailedExercise = {
+  exerciseId: string;
+  name: string;
+  gifUrl: string;
+  targetMuscles: string[];
+  bodyParts: string[];
+  equipments: string[];
+  secondaryMuscles: string[];
+  instructions: string[];
+  sets?: number;
+  reps?: string;
+  rest?: string;
+};
+
 export type ChatResponse = {
   coachTalk: string;
   workoutPlan?: WorkoutPlan;
+  detailedExercises?: DetailedExercise[];
   model: string;
   sessionId: string;
   timestamp: string;

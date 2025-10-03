@@ -1,7 +1,6 @@
 export interface ChatMessage {
-  role: "user" | "assistant" | "system";
+  role: "system" | "user" | "assistant";
   content: string;
-  timestamp?: string;
 }
 
 export interface WorkoutPlan {
@@ -22,6 +21,20 @@ export interface Exercise {
   targetMuscle: string;
 }
 
+export interface DetailedExercise {
+  exerciseId: string;
+  name: string;
+  gifUrl: string;
+  targetMuscles: string[];
+  bodyParts: string[];
+  equipments: string[];
+  secondaryMuscles: string[];
+  instructions: string[];
+  sets?: number;
+  reps?: string;
+  rest?: string;
+}
+
 export interface ChatRequest {
   message: string;
   model?: string;
@@ -31,10 +44,10 @@ export interface ChatRequest {
 
 export interface ChatResponse {
   workoutPlan?: WorkoutPlan;
+  detailedExercises?: DetailedExercise[];
   coachTalk: string;
   model: string;
   sessionId: string;
-  timestamp: string;
   requiresClarification?: boolean;
   clarificationQuestion?: string;
 }
@@ -50,6 +63,7 @@ export interface ModelProviderResponse {
   content: string;
   model: string;
   toolCalls?: ToolCall[];
+  toolChoice?: ToolChoice;
   usage?: {
     promptTokens: number;
     completionTokens: number;
