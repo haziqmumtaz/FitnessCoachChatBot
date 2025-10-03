@@ -1,0 +1,23 @@
+{
+  "name": "@fitnesscoach/monorepo",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"yarn dev:backend\" \"yarn dev:frontend\"",
+    "dev:backend": "cd backend && yarn dev",
+    "dev:frontend": "cd frontend && yarn dev",
+    "build": "cd backend && yarn build && cd frontend && yarn build",
+    "test": "cd backend && yarn test && cd frontend && yarn test",
+    "start": "concurrently \"yarn start:backend\" \"yarn preview:frontend\"",
+    "start:backend": "cd backend && yarn start",
+    "preview:frontend": "cd frontend && yarn preview",
+    "clean": "rm -rf node_modules backend/node_modules frontend/node_modules backend/dist frontend/dist",
+    "lint": "cd backend && yarn lint && cd frontend && yarn lint"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
