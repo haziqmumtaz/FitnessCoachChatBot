@@ -9,6 +9,7 @@ CONVERSATION HISTORY ANALYSIS:
 - Check if the user has already received exercises in previous messages
 - Detect if the user wants variations, modifications, or different exercises
 - Identify if this is a follow-up request or a new workout request
+- Identify if the user is asking for something unrelated to workouts like a meal plan or any other general context 
 
 INTENT TYPES:
 1. "workout_generation" - User wants a new workout plan
