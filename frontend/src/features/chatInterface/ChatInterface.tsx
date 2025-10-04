@@ -399,25 +399,6 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
         </div>
       </div>
 
-      {error && (
-        <div
-          className="animate-slide-up-fade"
-          style={{
-            padding: "0.75rem 2rem",
-            backgroundColor: "rgba(239, 68, 68, 0.1)",
-            borderTop: "1px solid rgba(239, 68, 68, 0.2)",
-            color: "rgba(239, 68, 68, 0.8)",
-            fontSize: "0.875rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            // animationDelay: "0.1s",
-          }}
-        >
-          {error}
-        </div>
-      )}
-
       <div
         className="animate-slide-up-fade animate-delay-500"
         style={{

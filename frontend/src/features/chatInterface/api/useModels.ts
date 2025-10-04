@@ -3,9 +3,7 @@ import { chatApi } from "./chat";
 
 export const useModels = () => {
   const [availableModels, setAvailableModels] = useState<string[]>([]);
-  const [selectedModel, setSelectedModel] = useState<string>(
-    "openai/gpt-oss-120b"
-  );
+  const [selectedModel, setSelectedModel] = useState<string>("GPT OSS 120b");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

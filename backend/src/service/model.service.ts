@@ -105,7 +105,7 @@ export class ModelProvider implements IModelProvider {
       ) as Model[];
       const result: AvailableModels = {
         models,
-        defaultModel: config.defaultModel,
+        defaultModel: models[0],
       };
       return success(result);
     } catch (error: any) {

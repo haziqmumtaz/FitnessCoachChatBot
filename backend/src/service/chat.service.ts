@@ -67,6 +67,8 @@ export class ChatService implements IChatService {
         intentDetection.intent
       );
 
+      console.log(workoutResult);
+
       if ("error" in workoutResult) {
         return failure(
           "Failed to generate workout",
@@ -222,13 +224,5 @@ export class ChatService implements IChatService {
     return `session_${Date.now()}_${Math.random()
       .toString(36)
       .substring(2, 9)}`;
-  }
-
-  private generateFallbackResponse(sessionId: string): ChatResponse {
-    return {
-      coachTalk: FALLBACK_RESPONSE_MESSAGE,
-      model: "fallback",
-      sessionId,
-    };
   }
 }

@@ -18,7 +18,7 @@ export type ModelConfig = {
 
 export const modelConfigs: Record<Model, ModelConfig> = {
   "GPT OSS 120b": {
-    name: "llama-3.3-70b-versatile",
+    name: "openai/gpt-oss-120b",
     provider: "groq",
     baseURL: "https://api.groq.com/openai/v1",
     apiKey: config.groqApiKey || "",
