@@ -1,7 +1,7 @@
 import { Container } from "inversify";
 import { TYPES } from "../types/di";
 import { ChatService, IChatService } from "../service/chat.service";
-import { ModelProvider, IModelProvider } from "../service/model.provider";
+import { ModelProvider, IModelProvider } from "../service/model.service";
 import { ToolService } from "../service/tool.service";
 import { IntentService, IIntentService } from "../service/intent.service";
 import { ApiRouter } from "../http";

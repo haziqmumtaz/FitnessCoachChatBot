@@ -5,23 +5,6 @@ export type ChatMessage = {
   detailedExercises?: DetailedExercise[];
 };
 
-export type WorkoutExercise = {
-  name: string;
-  sets: number;
-  reps: string;
-  rest: string;
-  instructions: string;
-  targetMuscle: string;
-};
-
-export type WorkoutPlan = {
-  exercises: WorkoutExercise[];
-  totalDuration: number;
-  equipment: string[];
-  targetMuscles: string[];
-  instructions: string;
-};
-
 export type ChatRequest = {
   message: string;
   model?: string;
@@ -45,7 +28,6 @@ export type DetailedExercise = {
 
 export type ChatResponse = {
   coachTalk: string;
-  workoutPlan?: WorkoutPlan;
   detailedExercises?: DetailedExercise[];
   model: string;
   sessionId: string;

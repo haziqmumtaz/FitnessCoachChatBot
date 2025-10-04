@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import type { DetailedExercise } from "../types/api";
+import { stringToTitleCase } from "../utils/string";
 
 interface ExerciseCardProps {
   exercise: DetailedExercise;
@@ -12,11 +13,13 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise }) => {
     <div
       style={{
         backgroundColor: "rgba(255, 255, 255, 0.95)",
-        borderRadius: "0.75rem",
-        padding: "1rem",
-        margin: "0.75rem 0",
-        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+        borderRadius: "0.5rem",
+        padding: "0.75rem",
+        margin: "0.5rem",
+        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
         border: "1px solid rgba(229, 231, 235, 0.8)",
+        width: "100%",
+        maxWidth: "300px",
       }}
     >
       {/* Header */}
@@ -25,7 +28,7 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise }) => {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: "0.75rem",
+          marginBottom: "0.5rem",
         }}
       >
         <h3
@@ -35,17 +38,18 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise }) => {
             fontWeight: "600",
             color: "#111827",
             flex: 1,
+            lineHeight: "1.2",
           }}
         >
-          {exercise.name}
+          {stringToTitleCase(exercise.name)}
         </h3>
         <button
           onClick={() => setShowInstructions(!showInstructions)}
           style={{
             backgroundColor: "#eff6ff",
             border: "1px solid #bfdbfe",
-            borderRadius: "0.375rem",
-            padding: "0.25rem 0.5rem",
+            borderRadius: "0.25rem",
+            padding: "0.125rem 0.375rem",
             fontSize: "0.75rem",
             color: "#1d4ed8",
             cursor: "pointer",
@@ -58,113 +62,77 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise }) => {
             e.currentTarget.style.backgroundColor = "#eff6ff";
           }}
         >
-          {showInstructions ? "Hide Steps" : "Show Steps"}
+          {showInstructions ? "Hide" : "Steps"}
         </button>
       </div>
 
-      {/* Exercise GIF */}
-      <div style={{ textAlign: "center", marginBottom: "0.75rem" }}>
+      <div style={{ textAlign: "center", marginBottom: "0.5rem" }}>
         <img
           src={exercise.gifUrl}
-          alt={exercise.name}
+          alt={stringToTitleCase(exercise.name)}
           style={{
             width: "100%",
-            maxWidth: "20rem",
+            maxWidth: "15rem",
+            objectFit: "cover",
             margin: "0 auto",
-            borderRadius: "0.5rem",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+            borderRadius: "0.375rem",
+            boxShadow: "0 2px 4px -1px rgba(0, 0, 0, 0.1)",
           }}
         />
       </div>
 
-      {/* Exercise Details */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-          gap: "0.5rem",
-          marginBottom: "0.75rem",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "0.375rem",
+          marginBottom: "0.5rem",
         }}
       >
-        {/* Target Muscles */}
         <div>
           <div
             style={{
-              fontSize: "0.75rem",
+              fontSize: "0.8rem",
               fontWeight: "600",
               color: "#6b7280",
-              marginBottom: "0.25rem",
+              marginBottom: "0.125rem",
             }}
           >
-            Target Muscles
+            Target
           </div>
-          <div style={{ fontSize: "0.875rem", color: "#374151" }}>
-            {exercise.targetMuscles.join(", ")}
+          <div
+            style={{ fontSize: "0.8rem", color: "#374151", lineHeight: "1.2" }}
+          >
+            {stringToTitleCase(exercise.targetMuscles.join(", "))}
           </div>
         </div>
 
-        {/* Equipment */}
         <div>
           <div
             style={{
-              fontSize: "0.75rem",
+              fontSize: "0.8rem",
               fontWeight: "600",
               color: "#6b7280",
-              marginBottom: "0.25rem",
+              marginBottom: "0.125rem",
             }}
           >
             Equipment
           </div>
-          <div style={{ fontSize: "0.875rem", color: "#374151" }}>
-            {exercise.equipments.join(", ")}
-          </div>
-        </div>
-
-        {/* Body Parts */}
-        <div>
           <div
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: "600",
-              color: "#6b7280",
-              marginBottom: "0.25rem",
-            }}
+            style={{ fontSize: "0.8rem", color: "#374151", lineHeight: "1.2" }}
           >
-            Body Parts
-          </div>
-          <div style={{ fontSize: "0.875rem", color: "#374151" }}>
-            {exercise.bodyParts.join(", ")}
+            {stringToTitleCase(exercise.equipments.join(", "))}
           </div>
         </div>
       </div>
 
-      {/* Secondary Muscles */}
-      {exercise.secondaryMuscles.length > 0 && (
-        <div style={{ marginBottom: "0.75rem" }}>
-          <div
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: "600",
-              color: "#6b7280",
-              marginBottom: "0.25rem",
-            }}
-          >
-            Secondary Muscles
-          </div>
-          <div style={{ fontSize: "0.875rem", color: "#4b5563" }}>
-            {exercise.secondaryMuscles.join(", ")}
-          </div>
-        </div>
-      )}
-
-      {/* Instructions */}
       {showInstructions && (
         <div
           style={{
             backgroundColor: "#f9fafb",
-            borderRadius: "0.5rem",
-            padding: "0.75rem",
-            marginTop: "0.75rem",
+            borderRadius: "0.375rem",
+            padding: "0.5rem",
+            marginTop: "0.5rem",
           }}
         >
           <div
@@ -172,17 +140,17 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise }) => {
               fontSize: "0.875rem",
               fontWeight: "600",
               color: "#374151",
-              marginBottom: "0.5rem",
+              marginBottom: "0.375rem",
             }}
           >
-            Step-by-Step Instructions:
+            Instructions:
           </div>
           <ol
             style={{
               margin: 0,
-              paddingLeft: "1.25rem",
-              fontSize: "0.875rem",
-              lineHeight: "1.6",
+              paddingLeft: "1rem",
+              fontSize: "0.8rem",
+              lineHeight: "1.4",
               color: "#374151",
             }}
           >
@@ -192,54 +160,6 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise }) => {
               </li>
             ))}
           </ol>
-        </div>
-      )}
-
-      {/* Workout Details (if available) */}
-      {(exercise.sets || exercise.reps || exercise.rest) && (
-        <div
-          style={{
-            backgroundColor: "#f0fdf4",
-            borderRadius: "0.375rem",
-            padding: "0.5rem",
-            marginTop: "0.75rem",
-            border: "1px solid #bbf7d0",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: "600",
-              color: "#166534",
-              marginBottom: "0.25rem",
-            }}
-          >
-            Workout Details
-          </div>
-          <div
-            style={{
-              display: "flex",
-              gap: "1rem",
-              fontSize: "0.875rem",
-              color: "#374151",
-            }}
-          >
-            {exercise.sets && (
-              <span>
-                <strong>Sets:</strong> {exercise.sets}
-              </span>
-            )}
-            {exercise.reps && (
-              <span>
-                <strong>Reps:</strong> {exercise.reps}
-              </span>
-            )}
-            {exercise.rest && (
-              <span>
-                <strong>Rest:</strong> {exercise.rest}
-              </span>
-            )}
-          </div>
         </div>
       )}
     </div>

@@ -14,7 +14,6 @@ export function LoadingSpinner({ label }: LoadingSpinnerProps) {
         padding: "2rem",
       }}
     >
-      {/* Spinner */}
       <div
         style={{
           width: "60px",
@@ -26,7 +25,6 @@ export function LoadingSpinner({ label }: LoadingSpinnerProps) {
         }}
       />
 
-      {/* Label */}
       {label && (
         <p
           style={{
@@ -41,7 +39,6 @@ export function LoadingSpinner({ label }: LoadingSpinnerProps) {
         </p>
       )}
 
-      {/* CSS Animation */}
       <style>
         {`
           @keyframes spin {

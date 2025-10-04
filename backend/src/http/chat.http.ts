@@ -2,7 +2,7 @@ import Router from "@koa/router";
 import { Context } from "koa";
 import { container } from "../config/container";
 import { IChatService } from "../service/chat.service";
-import { IModelProvider } from "../service/model.provider";
+import { IModelProvider } from "../service/model.service";
 import { TYPES } from "../types/di";
 import { ChatRequestSchema } from "./schemas/chat";
 
@@ -26,7 +26,6 @@ const modelsController = (ctx: Context) => {
     ctx.body = {
       models: availableModels,
       defaultModel: "openai/gpt-oss-120b",
-      timestamp: new Date().toISOString(),
     };
   } catch (error: any) {
     ctx.status = 500;

@@ -1,25 +1,9 @@
-export interface ChatMessage {
-  role: "system" | "user" | "assistant";
+export type LLMRole = "system" | "user" | "assistant" | "tool";
+
+export type ChatMessage = {
+  role: LLMRole;
   content: string;
-}
-
-export interface WorkoutPlan {
-  exercises: Exercise[];
-  totalDuration: number;
-  equipment: string[];
-  targetMuscles: string[];
-  instructions: string;
-}
-
-export interface Exercise {
-  name: string;
-  sets: number;
-  reps: string;
-  rest: string;
-  instructions: string;
-  equipment?: string;
-  targetMuscle: string;
-}
+};
 
 export interface DetailedExercise {
   exerciseId: string;
@@ -43,7 +27,6 @@ export interface ChatRequest {
 }
 
 export interface ChatResponse {
-  workoutPlan?: WorkoutPlan;
   detailedExercises?: DetailedExercise[];
   coachTalk: string;
   model: string;
@@ -89,7 +72,7 @@ export interface ModelProviderOptions {
   toolChoice?: "auto" | "none" | ToolChoice;
 }
 
-export interface Tool {
+export type Tool = {
   type: "function";
   function: {
     name: string;
@@ -100,17 +83,16 @@ export interface Tool {
       required: string[];
     };
   };
-}
+};
 
-export interface ToolChoice {
+export type ToolChoice = {
   type: "function";
   function: {
     name: string;
   };
-}
+};
 
-// ExerciseDB API Types
-export interface ExerciseDBExercise {
+export type ExerciseDBExercise = {
   id: string;
   name: string;
   gifUrl: string;
@@ -119,9 +101,9 @@ export interface ExerciseDBExercise {
   equipment: string;
   secondaryMuscles: string[];
   instructions: string[];
-}
+};
 
-export interface ExerciseDBResponse {
+export type ExerciseDBResponse = {
   success: boolean;
   metadata: {
     totalPages: number;
@@ -131,11 +113,17 @@ export interface ExerciseDBResponse {
     nextPage: number | null;
   };
   data: ExerciseDBExercise[];
-}
+};
+
+export type IntentType =
+  | "workout_generation"
+  | "exercise_lookup"
+  | "clarification_needed"
+  | "exercise_variation";
 
 // Intent Detection Types
-export interface WorkoutIntent {
-  type: "workout_generation" | "exercise_lookup" | "clarification_needed";
+export type WorkoutIntent = {
+  type: IntentType;
   confidence: number;
   extractedParams?: {
     targetMuscles?: string[];
@@ -146,17 +134,19 @@ export interface WorkoutIntent {
     numExercises?: number;
     avoidMuscles?: string[];
     injuryDescription?: string;
+    isVariationRequest?: boolean;
+    previousExerciseContext?: string;
   };
   missingParams?: string[];
-}
+};
 
-export interface Guardrail {
+export type Guardrail = {
   violation: boolean;
   reason: string;
-}
+};
 
-export interface IntentDetectionResponse {
+export type IntentDetectionResponse = {
   intent: WorkoutIntent;
   shouldCallTools: boolean;
   guardrail: Guardrail;
-}
+};

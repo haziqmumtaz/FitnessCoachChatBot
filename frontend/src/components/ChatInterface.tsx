@@ -1,159 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { chatApi } from "../api/chat";
-import type { ChatMessage, WorkoutPlan, DetailedExercise } from "../types/api";
+import type { ChatMessage } from "../types/api";
 import MarkdownRenderer from "./MarkdownRenderer";
 import ExerciseCard from "./ExerciseCard";
+import { condenseConversationHistory } from "../utils/conversationCondenser";
 
 interface ChatInterfaceProps {
   className?: string;
 }
-
-const WorkoutPlanCard = ({ workoutPlan }: { workoutPlan: WorkoutPlan }) => (
-  <div
-    style={{
-      backgroundColor: "#f0fdf4",
-      border: "1px solid #bbf7d0",
-      borderRadius: "0.75rem",
-      padding: "1rem",
-      marginTop: "0.5rem",
-    }}
-  >
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        marginBottom: "0.75rem",
-      }}
-    >
-      <div
-        style={{
-          width: "1.5rem",
-          height: "1.5rem",
-          backgroundColor: "#bbf7d0",
-          borderRadius: "50%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          marginRight: "0.5rem",
-        }}
-      >
-        <span style={{ fontSize: "0.75rem", color: "#166534" }}>💪</span>
-      </div>
-      <h4
-        style={{
-          margin: 0,
-          color: "#111827",
-          fontSize: "1rem",
-          fontWeight: "600",
-        }}
-      >
-        Workout Plan
-      </h4>
-    </div>
-
-    <div style={{ marginBottom: "0.75rem" }}>
-      <div
-        style={{
-          display: "flex",
-          gap: "0.5rem",
-          fontSize: "0.875rem",
-          color: "#374151",
-          marginBottom: "0.5rem",
-        }}
-      >
-        <span>⏱️ {workoutPlan.totalDuration} min</span>
-        <span>🎯 {workoutPlan.targetMuscles.join(", ")}</span>
-        <span>🏋️ {workoutPlan.equipment.join(", ") || "no equipment"}</span>
-      </div>
-      <p
-        style={{
-          margin: 0,
-          fontSize: "0.875rem",
-          color: "#4b5563",
-          lineHeight: "1.5",
-        }}
-      >
-        {workoutPlan.instructions}
-      </p>
-    </div>
-
-    <div>
-      <h5
-        style={{
-          margin: "0 0 0.5rem 0",
-          color: "#111827",
-          fontSize: "0.875rem",
-          fontWeight: "600",
-        }}
-      >
-        Exercises:
-      </h5>
-      {workoutPlan.exercises.map((exercise, index) => (
-        <div
-          key={index}
-          style={{
-            backgroundColor: "rgba(255, 255, 255, 0.05)",
-            borderRadius: "0.5rem",
-            padding: "0.75rem",
-            marginBottom: "0.5rem",
-            display: "flex",
-            gap: "0.75rem",
-          }}
-        >
-          <div
-            style={{
-              minWidth: "2rem",
-              height: "2rem",
-              backgroundColor: "#bbf7d0",
-              borderRadius: "0.375rem",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "0.875rem",
-            }}
-          >
-            {index + 1}
-          </div>
-          <div style={{ flex: 1 }}>
-            <h6
-              style={{
-                margin: "0 0 0.25rem 0",
-                color: "#111827",
-                fontSize: "0.875rem",
-                fontWeight: "600",
-              }}
-            >
-              {exercise.name}
-            </h6>
-            <div
-              style={{
-                display: "flex",
-                gap: "1rem",
-                fontSize: "0.75rem",
-                color: "#4b5563",
-                marginBottom: "0.25rem",
-              }}
-            >
-              <span>Sets: {exercise.sets}</span>
-              <span>Reps: {exercise.reps}</span>
-              <span>Rest: {exercise.rest}</span>
-            </div>
-            <p
-              style={{
-                margin: 0,
-                fontSize: "0.75rem",
-                color: "#6b7280",
-                lineHeight: "1.4",
-              }}
-            >
-              {exercise.instructions}
-            </p>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
 
 const QuickActionButton = ({
   text,
@@ -244,7 +98,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
       const response = await chatApi.sendMessage({
         message: inputValue.trim(),
         model: selectedModel,
-        conversationHistory: messages,
+        conversationHistory: condenseConversationHistory(messages),
         sessionId: sessionId || undefined,
       });
 
@@ -259,18 +113,6 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-
-      if (response.workoutPlan) {
-        const workoutMessage: ChatMessage = {
-          role: "assistant",
-          content: `Workout Plan:\n\n${JSON.stringify(
-            response.workoutPlan,
-            null,
-            2
-          )}`,
-        };
-        setMessages((prev) => [...prev, workoutMessage]);
-      }
     } catch (err: any) {
       setError(
         err.response?.data?.message || err.message || "Failed to send message"
@@ -294,7 +136,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
   };
 
   const quickActions = [
-    "I want a 20 minute workout",
+    "I want a 20 minute full body workout",
     "Create a beginner's routine",
     "Upper body exercise plan",
     "What equipment do I need?",
@@ -302,18 +144,6 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
 
   const sendQuickMessage = (message: string) => {
     setInputValue(message);
-  };
-
-  const parseWorkoutPlan = (content: string): WorkoutPlan | null => {
-    try {
-      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[1]);
-      }
-      return null;
-    } catch {
-      return null;
-    }
   };
 
   return (
@@ -354,7 +184,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                 letterSpacing: "-0.025em",
               }}
             >
-              FITNESS COACH AI
+              Tyson Training Coach
             </h1>
             <p
               style={{
@@ -505,7 +335,6 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
           }}
         >
           {messages.map((message, index) => {
-            const workoutPlan = parseWorkoutPlan(message.content);
             return (
               <div
                 key={index}
@@ -539,22 +368,9 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                       lineHeight: "1.5",
                     }}
                   >
-                    {workoutPlan ? (
-                      <>
-                        <MarkdownRenderer
-                          content={message.content
-                            .replace(/```json\s*[\s\S]*?\s*```/g, "")
-                            .trim()}
-                        />
-                        {workoutPlan && (
-                          <WorkoutPlanCard workoutPlan={workoutPlan} />
-                        )}
-                      </>
-                    ) : (
-                      <MarkdownRenderer content={message.content} />
-                    )}
+                    <MarkdownRenderer content={message.content} />
 
-                    {/* Show detailed exercises regardless of workout plan */}
+                    {/* Show detailed exercises */}
                     {message.detailedExercises &&
                       message.detailedExercises.length > 0 && (
                         <div style={{ marginTop: "1rem" }}>
@@ -568,12 +384,24 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                           >
                             Exercise Details
                           </h4>
-                          {message.detailedExercises.map((exercise, index) => (
-                            <ExerciseCard
-                              key={exercise.exerciseId || index}
-                              exercise={exercise}
-                            />
-                          ))}
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns:
+                                "repeat(auto-fit, minmax(280px, 1fr))",
+                              gap: "0.5rem",
+                              justifyContent: "center",
+                            }}
+                          >
+                            {message.detailedExercises.map(
+                              (exercise, index) => (
+                                <ExerciseCard
+                                  key={exercise.exerciseId || index}
+                                  exercise={exercise}
+                                />
+                              )
+                            )}
+                          </div>
                         </div>
                       )}
                   </div>
@@ -613,7 +441,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                       animation: "spin 1s linear infinite",
                     }}
                   ></div>
-                  Coach is thinking...
+                  Tyson is thinking...
                 </div>
               </div>
             </div>
@@ -637,7 +465,6 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
             gap: "0.5rem",
           }}
         >
-          <span>⚠️</span>
           {error}
         </div>
       )}
@@ -686,8 +513,8 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
               style={{
                 background:
                   isLoading || !inputValue.trim()
-                    ? "rgba(0, 0, 0, 0.05)"
-                    : "rgba(0, 0, 0, 0.8)",
+                    ? "rgba(0, 0, 0, 0.4)"
+                    : "rgba(63, 50, 50, 0.8)",
                 border: "none",
                 borderRadius: "50%",
                 color: "white",

@@ -12,10 +12,6 @@ export interface IModelProvider {
     messages: ChatMessage[],
     options?: ModelProviderOptions
   ): Promise<ModelProviderResponse>;
-  stream?(
-    messages: ChatMessage[],
-    options?: ModelProviderOptions
-  ): AsyncIterator<ModelProviderResponse>;
 }
 
 interface ModelConfig {
@@ -32,28 +28,34 @@ export class ModelProvider implements IModelProvider {
   constructor() {
     this.modelConfigs = {
       "openai/gpt-oss-120b": {
-        name: "openai/gpt-oss-120b",
-        provider: "openai",
-        baseURL: "https://api.groq.com/openai/v1",
-        apiKey: config.groqApiKey || "",
-      },
-      "llama-3.3-70b-versatile": {
         name: "llama-3.3-70b-versatile",
         provider: "groq",
         baseURL: "https://api.groq.com/openai/v1",
         apiKey: config.groqApiKey || "",
       },
-      "llama-3.1-8b-instant": {
+      "llama-3.3-versatile": {
+        name: "llama-3.3-70b-versatile",
+        provider: "groq",
+        baseURL: "https://api.groq.com/openai/v1",
+        apiKey: config.groqApiKey || "",
+      },
+      "llama-3.1-instant": {
         name: "llama-3.1-8b-instant",
         provider: "groq",
         baseURL: "https://api.groq.com/openai/v1",
         apiKey: config.groqApiKey || "",
       },
-      "deepseek-chat": {
+      deepseek: {
         name: "deepseek-chat",
         provider: "deepseek",
         baseURL: "https://api.deepseek.com/",
         apiKey: config.deepSeekApiKey || "",
+      },
+      gemini: {
+        name: "gemini-2.0-flash",
+        provider: "gemini",
+        baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+        apiKey: config.geminiApiKey || "",
       },
     };
   }
@@ -80,7 +82,7 @@ export class ModelProvider implements IModelProvider {
 
     const response = await client.chat.completions.create({
       model: modelConfig.name,
-      messages: messages,
+      messages: messages as any, // Type assertion for OpenAI compatibility
       temperature: options?.temperature || 0.7,
       max_tokens: options?.maxTokens || 1000,
       stream: false,

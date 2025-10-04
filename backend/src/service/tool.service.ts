@@ -1,6 +1,10 @@
 import axios from "axios";
-import { ExerciseDBExercise, ExerciseDBResponse } from "../types/chat";
-import config from "../config";
+import {
+  ExerciseDBExercise,
+  ExerciseDBResponse,
+  Tool,
+  ToolCall,
+} from "../types/chat";
 
 export class ToolService {
   private readonly exerciseDBBaseURL = "https://www.exercisedb.dev/api/v1";
@@ -20,10 +24,8 @@ export class ToolService {
         offset: params.offset || 0,
         limit: Math.min(params.limit || 10, 25), // API max is 25
         q: params.searchQuery,
-        threshold: params.threshold || 0.7, // Default fuzzy threshold
+        threshold: params.threshold || 0.5, // Default fuzzy threshold
       };
-
-      console.log("queryparams", queryParams);
 
       const response = await axios.get(
         `${this.exerciseDBBaseURL}/exercises/search`,
@@ -50,45 +52,34 @@ export class ToolService {
     }
   }
 
-  /**
-   * Convert ExerciseDB exercise to our WorkoutPlan exercise format
-   */
-  convertToWorkoutExercise(
-    exercise: ExerciseDBExercise,
-    sets: number = 3,
-    reps: string = "10-15",
-    rest: string = "30-60s"
-  ): any {
-    return {
-      name: exercise.name,
-      sets: sets,
-      reps: reps,
-      rest: rest,
-      instructions: exercise.instructions.join(" "),
-      targetMuscle: exercise.target,
-      gifUrl: exercise.gifUrl,
-      equipment: exercise.equipment,
-      secondaryMuscles: exercise.secondaryMuscles,
-    };
-  }
-
-  /**
-   * Generate workout exercises using fuzzy search
-   * Builds a search query from the provided parameters
-   */
   async getWorkoutExercises(params: {
     targetMuscles?: string[];
     bodyParts?: string[];
     equipment?: string[];
     numExercises?: number;
     search?: string;
+    isVariationRequest?: boolean;
+    previousExerciseContext?: string;
   }): Promise<ExerciseDBExercise[]> {
     try {
-      // Build a comprehensive search query from all parameters
       const searchTerms: string[] = [];
 
       if (params.search) {
         searchTerms.push(params.search);
+      }
+
+      if (params.isVariationRequest) {
+        searchTerms.push("variation", "alternative", "different");
+
+        if (params.previousExerciseContext) {
+          const previousMuscles = params.previousExerciseContext.toLowerCase();
+          if (previousMuscles.includes("chest")) {
+            searchTerms.push("upper body", "shoulders", "triceps");
+          }
+          if (previousMuscles.includes("legs")) {
+            searchTerms.push("lower body", "glutes", "calves");
+          }
+        }
       }
 
       if (params.targetMuscles && params.targetMuscles.length > 0) {
@@ -103,7 +94,6 @@ export class ToolService {
         searchTerms.push(...params.equipment);
       }
 
-      // Create a single search query
       const searchQuery = searchTerms.join(" ");
 
       const exercises = await this.getFuzzySearchExercises({
@@ -111,12 +101,112 @@ export class ToolService {
         limit: params.numExercises || 8,
       });
 
-      console.log("ExerciseDB response:", exercises.data.length);
-
       return exercises.data.slice(0, params.numExercises || 8);
     } catch (error: any) {
       console.error("Error generating workout exercises:", error.message);
       return [];
     }
+  }
+
+  getAvailableTools(): Tool[] {
+    return [
+      {
+        type: "function",
+        function: {
+          name: "get_workout_exercises",
+          description:
+            "Get filtered exercises for a workout plan using ExerciseDB filter endpoint",
+          parameters: {
+            type: "object",
+            properties: {
+              targetMuscles: {
+                type: "array",
+                items: { type: "string" },
+                description:
+                  "Array of target muscle groups (e.g., ['chest', 'biceps', 'triceps'])",
+              },
+              bodyParts: {
+                type: "array",
+                items: { type: "string" },
+                description:
+                  "Array of body parts (e.g., ['upper arms', 'chest', 'back'])",
+              },
+              equipment: {
+                type: "array",
+                items: { type: "string" },
+                description:
+                  "Array of available equipment (e.g., ['dumbbell', 'barbell', 'body weight'])",
+              },
+              search: {
+                type: "string",
+                description:
+                  "Optional search term (e.g., 'chest workout', 'beginner routine')",
+              },
+              numExercises: {
+                type: "integer",
+                description: "Number of exercises to return (default: 8)",
+              },
+              isVariationRequest: {
+                type: "boolean",
+                description:
+                  "Whether this is a request for exercise variations",
+              },
+              previousExerciseContext: {
+                type: "string",
+                description:
+                  "Context about previously provided exercises for variation requests",
+              },
+            },
+            required: [],
+          },
+        },
+      },
+    ];
+  }
+
+  async processToolCalls(
+    toolCalls: ToolCall[]
+  ): Promise<{ toolCallId: string; result: any }[]> {
+    const results: { toolCallId: string; result: any }[] = [];
+
+    for (const toolCall of toolCalls) {
+      try {
+        const args = JSON.parse(toolCall.function.arguments);
+        let result;
+
+        switch (toolCall.function.name) {
+          case "get_workout_exercises":
+            result = await this.getWorkoutExercises({
+              targetMuscles: args.targetMuscles,
+              bodyParts: args.bodyParts,
+              equipment: args.equipment,
+              numExercises: args.numExercises,
+              search: args.search,
+              isVariationRequest: args.isVariationRequest,
+              previousExerciseContext: args.previousExerciseContext,
+            });
+            break;
+
+          default:
+            result = { error: `Unknown tool: ${toolCall.function.name}` };
+        }
+
+        results.push({
+          toolCallId: toolCall.id,
+          result: result,
+        });
+      } catch (error: any) {
+        console.error(
+          `Error processing tool call ${toolCall.function.name}:`,
+          error.message
+        );
+        results.push({
+          toolCallId: toolCall.id,
+          result: { error: `Failed to execute tool: ${error.message}` },
+        });
+      }
+    }
+
+    return results;
   }
 }
