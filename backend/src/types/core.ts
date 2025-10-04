@@ -1,19 +1,27 @@
 import Application from "koa";
 
-export type HttpResult<T> = success<T> | failure;
+// Success/Failure Response Pattern
+export type Success<T> = T;
 
-type success<T> = T;
-
-type failure = {
+export type Failure = {
   error: string;
-  status: number;
+  code?: string;
+  details?: any;
 };
 
-export const Success = <T>(data: T): success<T> => data;
+export type Result<T> = Success<T> | Failure;
 
-export const Failure = (error: string, status: number): failure => ({
+// Utility functions for creating responses
+export const success = <T>(data: T): Success<T> => data;
+
+export const failure = (
+  error: string,
+  code?: string,
+  details?: any
+): Failure => ({
   error,
-  status: status,
+  code,
+  details,
 });
 
 export interface Mountable {

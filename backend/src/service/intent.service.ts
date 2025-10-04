@@ -3,13 +3,14 @@ import { container } from "../config/container";
 import { ChatMessage, IntentDetectionResponse } from "../types/chat";
 import { TYPES } from "../types/di";
 import { IModelProvider } from "./model.service";
+import { Result, success, failure } from "../types/core";
 import { INTENT_DETECTION_PROMPT } from "../constants/prompts";
 
 export interface IIntentService {
   detectIntent(
     message: string,
     conversationHistory?: ChatMessage[]
-  ): Promise<IntentDetectionResponse>;
+  ): Promise<Result<IntentDetectionResponse>>;
 }
 
 @injectable()
@@ -23,7 +24,7 @@ export class IntentService implements IIntentService {
   async detectIntent(
     message: string,
     conversationHistory?: ChatMessage[]
-  ): Promise<IntentDetectionResponse> {
+  ): Promise<Result<IntentDetectionResponse>> {
     try {
       const intentPrompt = INTENT_DETECTION_PROMPT;
 
@@ -33,16 +34,25 @@ export class IntentService implements IIntentService {
         { role: "user", content: message },
       ];
 
-      const response = await this.modelProvider.chat(messages, {
+      const modelResponse = await this.modelProvider.chat(messages, {
         model: "llama-3.3-versatile",
         temperature: 0.0,
         maxTokens: 300,
       });
 
-      return this.parseIntentResponse(response.content);
+      if ("error" in modelResponse) {
+        return failure(
+          "Failed to get model response",
+          "MODEL_ERROR",
+          modelResponse.error
+        );
+      }
+
+      const parsedIntent = this.parseIntentResponse(modelResponse.content);
+      return success(parsedIntent);
     } catch (error: any) {
       console.error("Intent detection error:", error.message);
-      return this.getDefaultIntent();
+      return failure("Intent detection failed", "INTENT_ERROR", error.message);
     }
   }
 

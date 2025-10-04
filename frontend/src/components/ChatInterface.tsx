@@ -4,52 +4,11 @@ import type { ChatMessage } from "../types/api";
 import MarkdownRenderer from "./MarkdownRenderer";
 import ExerciseCard from "./ExerciseCard";
 import { condenseConversationHistory } from "../utils/conversationCondenser";
+import QuickActionButton from "./QuickActionButton";
 
 interface ChatInterfaceProps {
   className?: string;
 }
-
-const QuickActionButton = ({
-  text,
-  onClick,
-  disabled = false,
-}: {
-  text: string;
-  onClick: () => void;
-  disabled?: boolean;
-}) => (
-  <button
-    onClick={onClick}
-    disabled={disabled}
-    style={{
-      background: disabled ? "rgba(0, 0, 0, 0.04)" : "rgba(255, 255, 255, 0.9)",
-      border: disabled
-        ? "1px solid rgba(0, 0, 0, 0.05)"
-        : "1px solid rgba(0, 0, 0, 0.15)",
-      borderRadius: "8px",
-      color: disabled ? "rgba(0, 0, 0, 0.4)" : "rgba(0, 0, 0, 0.9)",
-      padding: "0.5rem 0.75rem",
-      fontSize: "0.875rem",
-      cursor: disabled ? "not-allowed" : "pointer",
-      transition: "all 0.2s ease",
-      whiteSpace: "nowrap",
-    }}
-    onMouseEnter={(e) => {
-      if (!disabled) {
-        e.currentTarget.style.background = "rgba(255, 255, 255, 1)";
-        e.currentTarget.style.borderColor = "rgba(0, 0, 0, 0.2)";
-      }
-    }}
-    onMouseLeave={(e) => {
-      if (!disabled) {
-        e.currentTarget.style.background = "rgba(255, 255, 255, 0.9)";
-        e.currentTarget.style.borderColor = "rgba(0, 0, 0, 0.15)";
-      }
-    }}
-  >
-    {text}
-  </button>
-);
 
 export const ChatInterface = ({ className }: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -160,7 +119,6 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
         backgroundColor: "#f5f5f5",
       }}
     >
-      {/* Header */}
       <div
         style={{
           padding: "1.5rem 2rem",
@@ -172,7 +130,6 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
           flexShrink: 0,
         }}
       >
-        {/* Logo and title */}
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <div>
             <h1
@@ -199,7 +156,6 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
           </div>
         </div>
 
-        {/* Controls */}
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <select
             value={selectedModel}
@@ -214,7 +170,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
               cursor: "pointer",
             }}
           >
-            {availableModels.map((model) => (
+            {availableModels?.map((model) => (
               <option key={model} value={model}>
                 {model.replace("openai/", "").replace("gpt-", "GPT-")}
               </option>
@@ -278,16 +234,9 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
             }}
           >
             <div style={{ textAlign: "center" }}>
-              <p
-                style={{
-                  margin: "0 0 0.5rem 0",
-                  fontSize: "1.2rem",
-                  fontWeight: "500",
-                  color: "rgba(0, 0, 0, 0.8)",
-                }}
-              >
-                Hi there! I'm your support assistant. How can I help?
-              </p>
+              <p style={{ transition: "0.5s" }}>Hi there!</p>
+              <p>I'm Tyson, your fitness coach assistant.</p>
+              <p>How can I help?</p>
               <p
                 style={{
                   margin: 0,
@@ -295,7 +244,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                   color: "rgba(0, 0, 0, 0.6)",
                 }}
               >
-                Chat with your AI fitness coach
+                Try out some quick actions below
               </p>
             </div>
 

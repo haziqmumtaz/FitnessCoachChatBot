@@ -150,3 +150,8 @@ export type IntentDetectionResponse = {
   shouldCallTools: boolean;
   guardrail: Guardrail;
 };
+
+export type AvailableModels = {
+  models: string[];
+  defaultModel: string;
+};
