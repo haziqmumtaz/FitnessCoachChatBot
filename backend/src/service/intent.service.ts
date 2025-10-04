@@ -35,7 +35,7 @@ export class IntentService implements IIntentService {
       ];
 
       const modelResponse = await this.modelProvider.chat(messages, {
-        model: "llama-3.3-versatile",
+        model: "Llama 3.3 Versatile",
         temperature: 0.0,
         maxTokens: 300,
       });

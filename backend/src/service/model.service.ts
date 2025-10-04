@@ -1,13 +1,14 @@
 import { injectable } from "inversify";
 import OpenAI from "openai";
-import {
-  ModelProviderResponse,
-  ModelProviderOptions,
-  ChatMessage,
-  AvailableModels,
-} from "../types/chat";
-import { Result, success, failure } from "../types/core";
 import config from "../config";
+import { Model, modelConfigs } from "../constants/models";
+import {
+  AvailableModels,
+  ChatMessage,
+  ModelProviderOptions,
+  ModelProviderResponse,
+} from "../types/chat";
+import { failure, Result, success } from "../types/core";
 
 export interface IModelProvider {
   chat(
@@ -26,47 +27,10 @@ interface ModelConfig {
 
 @injectable()
 export class ModelProvider implements IModelProvider {
-  private readonly modelConfigs: Record<string, ModelConfig>;
+  private readonly modelConfigs: Record<Model, ModelConfig>;
 
   constructor() {
-    this.modelConfigs = {
-      "openai/gpt-oss-120b": {
-        name: "llama-3.3-70b-versatile",
-        provider: "groq",
-        baseURL: "https://api.groq.com/openai/v1",
-        apiKey: config.groqApiKey || "",
-      },
-      "llama-3.3-versatile": {
-        name: "llama-3.3-70b-versatile",
-        provider: "groq",
-        baseURL: "https://api.groq.com/openai/v1",
-        apiKey: config.groqApiKey || "",
-      },
-      "llama-3.1-instant": {
-        name: "llama-3.1-8b-instant",
-        provider: "groq",
-        baseURL: "https://api.groq.com/openai/v1",
-        apiKey: config.groqApiKey || "",
-      },
-      "llama-guard-4": {
-        name: "meta-llama/llama-guard-4-12b",
-        provider: "groq",
-        baseURL: "https://api.groq.com/openai/v1",
-        apiKey: config.groqApiKey || "",
-      },
-      deepseek: {
-        name: "deepseek-chat",
-        provider: "deepseek",
-        baseURL: "https://api.deepseek.com/",
-        apiKey: config.deepSeekApiKey || "",
-      },
-      gemini: {
-        name: "gemini-2.0-flash",
-        provider: "gemini",
-        baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-        apiKey: config.geminiApiKey || "",
-      },
-    };
+    this.modelConfigs = modelConfigs;
   }
 
   async chat(
@@ -75,7 +39,7 @@ export class ModelProvider implements IModelProvider {
   ): Promise<Result<ModelProviderResponse>> {
     try {
       const modelName = options?.model || config.defaultModel;
-      const modelConfig = this.modelConfigs[modelName];
+      const modelConfig = this.modelConfigs[modelName as Model];
 
       if (!modelConfig) {
         return failure(
@@ -143,7 +107,7 @@ export class ModelProvider implements IModelProvider {
 
   async getAvailableModels(): Promise<Result<AvailableModels>> {
     try {
-      const models = Object.keys(this.modelConfigs);
+      const models = Object.keys(this.modelConfigs) as Model[];
       const result: AvailableModels = {
         models,
         defaultModel: config.defaultModel,
