@@ -111,7 +111,6 @@ export type ExerciseDBResponse = {
 export type IntentType =
   | "workout_generation"
   | "exercise_lookup"
-  | "clarification_needed"
   | "exercise_variation";
 
 export type WorkoutIntent = {

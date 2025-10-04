@@ -48,6 +48,12 @@ export class ModelProvider implements IModelProvider {
         baseURL: "https://api.groq.com/openai/v1",
         apiKey: config.groqApiKey || "",
       },
+      "llama-guard-4": {
+        name: "meta-llama/llama-guard-4-12b",
+        provider: "groq",
+        baseURL: "https://api.groq.com/openai/v1",
+        apiKey: config.groqApiKey || "",
+      },
       deepseek: {
         name: "deepseek-chat",
         provider: "deepseek",

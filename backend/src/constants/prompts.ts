@@ -166,7 +166,7 @@ export const buildFinalResponsePrompt = (intent: WorkoutIntent): string => {
 };
 
 // Guardrail Violation Message
-export const GUARDRAIL_VIOLATION_MESSAGE = `I'm a fitness coach AI focused specifically on exercise guidance and workout plans. I can't help with topics outside of fitness and exercise.
+export const GUARDRAIL_VIOLATION_MESSAGE = `I'm a fitness coach AI focused specifically on exercise guidance and workout plans. I can't help with topics outside of workout and exercise.
 
 **I can help you with:**
 
@@ -214,5 +214,4 @@ export const FALLBACK_RESPONSE_MESSAGE =
 export const GENERIC_RESPONSE_EXAMPLES = [
   "I'd love to help you create a workout! Could you tell me what muscle groups you'd like to focus on and what equipment you have available?",
   "What type of workout are you looking for? I can help with strength training, cardio, or specific muscle groups.",
-  "I need a bit more information to create your perfect workout. What's your fitness goal and available equipment?",
 ];

@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from "react";
-import type { ChatMessage, DetailedExercise } from "../../types/api";
-import MarkdownRenderer from "../../components/MarkdownRenderer";
-import ExerciseCard from "./components/ExerciseCard";
-import { condenseConversationHistory } from "../../utils/conversationCondenser";
-import QuickActionButton from "../../components/QuickActionButton";
-import { useChat, useModels } from "./api";
+import { useEffect, useRef, useState } from "react";
 import tyson from "../../assets/tyson_logo.png";
+import MarkdownRenderer from "../../components/MarkdownRenderer";
+import QuickActionButton from "../../components/QuickActionButton";
+import type { DetailedExercise } from "../../types/api";
+import { condenseConversationHistory } from "../../utils/conversationCondenser";
+import { useChat, useModels } from "./api";
+import ExerciseCard from "./components/ExerciseCard";
 
 interface ChatInterfaceProps {
   className?: string;
@@ -13,12 +13,24 @@ interface ChatInterfaceProps {
 
 export const ChatInterface = ({ className }: ChatInterfaceProps) => {
   const [inputValue, setInputValue] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Custom hooks for chat and models
   const { messages, isLoading, error, sendMessage, clearChat } = useChat();
 
   const { availableModels, selectedModel, setSelectedModel } = useModels();
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     if (messages.length > 0 && messages[messages.length - 1].role === "user") {
@@ -65,7 +77,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
     >
       <div
         style={{
-          padding: "1.5rem 2rem",
+          padding: isMobile ? "1rem 1rem" : "1.5rem 2rem",
           borderBottom: "1px solid #55E37A",
           display: "flex",
           justifyContent: "space-between",
@@ -80,18 +92,28 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
           zIndex: 1000,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: isMobile ? "0.5rem" : "1rem",
+          }}
+        >
           <img
             src={tyson}
             alt="Tyson"
-            style={{ width: "100px", height: "50px", objectFit: "cover" }}
+            style={{
+              width: isMobile ? "60px" : "100px",
+              height: isMobile ? "30px" : "50px",
+              objectFit: "cover",
+            }}
           />
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
             <div>
               <h1
                 style={{
                   margin: 0,
-                  fontSize: "1.5rem",
+                  fontSize: isMobile ? "1rem" : "1.5rem",
                   fontWeight: "bold",
                   color: "#1a1a1a",
                   letterSpacing: "-0.025em",
@@ -107,13 +129,13 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
             onClick={clearChat}
             disabled={messages.length === 0}
             style={{
-              padding: "0.5rem 1rem",
+              padding: isMobile ? "0.375rem 0.75rem" : "0.5rem 1rem",
               borderRadius: "0.5rem",
-              fontSize: "0.875rem",
+              fontSize: isMobile ? "0.75rem" : "0.875rem",
               fontWeight: "500",
               display: "flex",
               alignItems: "center",
-              gap: "0.5rem",
+              gap: isMobile ? "0.25rem" : "0.5rem",
               transition: "all 0.2s",
               backgroundColor: messages.length === 0 ? "#f3f4f6" : "#55E37A",
               color: messages.length === 0 ? "#9ca3af" : "#374151",
@@ -144,7 +166,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          paddingTop: "100px", // Add padding to account for fixed header
+          paddingTop: isMobile ? "70px" : "100px", // Responsive padding
         }}
       >
         {/* Welcome message when no chat */}
@@ -156,27 +178,50 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
               alignItems: "center",
               justifyContent: "center",
               flexDirection: "column",
-              gap: "2rem",
-              padding: "2rem",
+              gap: isMobile ? "1.5rem" : "2rem",
+              padding: isMobile ? "1rem" : "2rem",
             }}
           >
             <img
               src={tyson}
               alt="Tyson"
               className="animate-slide-up-fade animate-delay-200"
-              style={{ width: "300px", height: "150px", objectFit: "cover" }}
+              style={{
+                width: isMobile ? "200px" : "300px",
+                height: isMobile ? "100px" : "150px",
+                objectFit: "cover",
+              }}
             />
             <div
               className="animate-slide-up-fade animate-delay-300"
               style={{ textAlign: "center" }}
             >
-              <p style={{ transition: "0.5s" }}>Hi there!</p>
-              <p>I'm Tyson, your workout assistant.</p>
-              <p>How can I help?</p>
+              <p
+                style={{
+                  transition: "0.5s",
+                  fontSize: isMobile ? "0.9rem" : "1rem",
+                }}
+              >
+                Hi there!
+              </p>
+              <p
+                style={{
+                  fontSize: isMobile ? "0.9rem" : "1rem",
+                }}
+              >
+                I'm Tyson, your workout assistant.
+              </p>
+              <p
+                style={{
+                  fontSize: isMobile ? "0.9rem" : "1rem",
+                }}
+              >
+                How can I help?
+              </p>
               <p
                 style={{
                   margin: 0,
-                  fontSize: "0.9rem",
+                  fontSize: isMobile ? "0.8rem" : "0.9rem",
                   color: "rgba(0, 0, 0, 0.6)",
                 }}
               >
@@ -189,10 +234,10 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
               className="animate-slide-up-fade animate-delay-400"
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gap: "1rem",
+                gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+                gap: isMobile ? "0.75rem" : "1rem",
                 width: "100%",
-                maxWidth: "600px",
+                maxWidth: isMobile ? "100%" : "600px",
               }}
             >
               {quickActions.map((action, index) => (
@@ -215,10 +260,10 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
           style={{
             flex: messages.length > 0 ? 1 : 0,
             overflowY: "auto",
-            padding: "1.5rem 2rem",
+            padding: isMobile ? "1rem" : "1.5rem 2rem",
             display: "flex",
             flexDirection: "column",
-            gap: "1rem",
+            gap: isMobile ? "0.75rem" : "1rem",
             backgroundColor:
               messages.length > 0 ? "transparent" : "transparent",
           }}
@@ -231,14 +276,14 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                 style={{
                   alignSelf:
                     message.role === "user" ? "flex-end" : "flex-start",
-                  maxWidth: "80%",
+                  maxWidth: isMobile ? "90%" : "80%",
                   // animationDelay: `${index * 0.1}s`, // Stagger each message
                 }}
               >
                 <div
                   style={{
                     background: message.role === "user" ? "#C3E906" : "white",
-                    padding: "1rem 1.25rem",
+                    padding: isMobile ? "0.75rem 1rem" : "1rem 1.25rem",
                     borderRadius: "16px",
                     border:
                       message.role === "user"
@@ -252,7 +297,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                 >
                   <div
                     style={{
-                      fontSize: "0.95rem",
+                      fontSize: isMobile ? "0.875rem" : "0.95rem",
                       lineHeight: "1.5",
                     }}
                   >
@@ -275,9 +320,10 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                           <div
                             style={{
                               display: "grid",
-                              gridTemplateColumns:
-                                "repeat(auto-fit, minmax(280px, 1fr))",
-                              gap: "0.5rem",
+                              gridTemplateColumns: isMobile
+                                ? "1fr"
+                                : "repeat(auto-fit, minmax(280px, 1fr))",
+                              gap: isMobile ? "0.75rem" : "0.5rem",
                               justifyContent: "center",
                             }}
                           >
@@ -310,14 +356,14 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
               className="animate-slide-up-fade"
               style={{
                 alignSelf: "flex-start",
-                maxWidth: "80%",
+                maxWidth: isMobile ? "90%" : "80%",
                 // animationDelay: "0.1s", // Small delay for loading indicator
               }}
             >
               <div
                 style={{
                   background: "white",
-                  padding: "1rem 1.25rem",
+                  padding: isMobile ? "0.75rem 1rem" : "1rem 1.25rem",
                   borderRadius: "16px",
                   border: "1px solid rgba(0, 0, 0, 0.1)",
                   boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
@@ -375,13 +421,14 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
       <div
         className="animate-slide-up-fade animate-delay-500"
         style={{
-          padding: "1.5rem 2rem",
+          padding: isMobile ? "1rem" : "1.5rem 2rem",
           backgroundColor: "white",
           borderTop: "1px solid rgba(0, 0, 0, 0.05)",
           flexShrink: 0,
           display: "flex",
-          gap: "1rem",
+          gap: isMobile ? "0.5rem" : "1rem",
           alignItems: "center",
+          flexDirection: isMobile ? "column" : "row",
         }}
       >
         <select
@@ -392,9 +439,11 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
             border: "0.5px solid #55E37A",
             borderRadius: "0.5rem",
             color: "#374151",
+            justifyContent: isMobile ? "start" : "center",
             padding: "0.5rem 0.75rem",
-            fontSize: "0.875rem",
+            fontSize: isMobile ? "0.75rem" : "0.875rem",
             cursor: "pointer",
+            width: "auto",
           }}
         >
           {availableModels?.map((model) => (
@@ -403,8 +452,18 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
             </option>
           ))}
         </select>
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: "flex", gap: "1rem", alignItems: "flex-end" }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ flex: 1, width: isMobile ? "100%" : "auto" }}
+        >
+          <div
+            style={{
+              display: "flex",
+              gap: "1rem",
+              alignItems: "flex-end",
+              width: "100%",
+            }}
+          >
             <input
               type="text"
               value={inputValue}
@@ -417,9 +476,9 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                 border: "1px solid rgba(0, 0, 0, 0.1)",
                 borderRadius: "24px",
                 color: "rgba(0, 0, 0, 0.8)",
-                padding: "0.875rem 1rem",
-                fontSize: "0.9rem",
-                width: "80vw",
+                padding: isMobile ? "0.75rem 1rem" : "0.875rem 1rem",
+                fontSize: isMobile ? "0.875rem" : "0.9rem",
+                minWidth: 0,
                 outline: "none",
                 transition: "all 0.2s ease",
               }}
@@ -444,9 +503,9 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                 border: "none",
                 borderRadius: "50%",
                 color: "white",
-                width: "48px",
-                height: "48px",
-                fontSize: "18px",
+                width: isMobile ? "40px" : "48px",
+                height: isMobile ? "40px" : "48px",
+                fontSize: isMobile ? "16px" : "18px",
                 cursor:
                   isLoading || !inputValue.trim() ? "not-allowed" : "pointer",
                 opacity: isLoading || !inputValue.trim() ? 0.5 : 1,
@@ -454,6 +513,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                flexShrink: 0,
               }}
             >
               {isLoading ? (
