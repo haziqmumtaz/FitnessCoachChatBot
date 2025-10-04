@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import type { DetailedExercise } from "../types/api";
-import { stringToTitleCase } from "../utils/string";
+import type { DetailedExercise } from "../../../types/api";
+import { stringToTitleCase } from "../../../utils/string";
 
 interface ExerciseCardProps {
   exercise: DetailedExercise;
@@ -46,20 +46,20 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise }) => {
         <button
           onClick={() => setShowInstructions(!showInstructions)}
           style={{
-            backgroundColor: "#eff6ff",
-            border: "1px solid #bfdbfe",
+            backgroundColor: "#C3E906",
+            border: "1px solid #C3E906",
             borderRadius: "0.25rem",
             padding: "0.125rem 0.375rem",
             fontSize: "0.75rem",
-            color: "#1d4ed8",
+            color: "black",
             cursor: "pointer",
             transition: "background-color 0.2s",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#dbeafe";
+            e.currentTarget.style.backgroundColor = "#C3E906";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#eff6ff";
+            e.currentTarget.style.backgroundColor = "#C3E906";
           }}
         >
           {showInstructions ? "Hide" : "Steps"}

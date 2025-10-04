@@ -35,13 +35,6 @@ export interface ChatResponse {
   clarificationQuestion?: string;
 }
 
-export interface WorkoutParameters {
-  duration?: number;
-  equipment?: string;
-  targetMuscle?: string;
-  intensity?: "beginner" | "intermediate" | "advanced";
-}
-
 export interface ModelProviderResponse {
   content: string;
   model: string;
@@ -121,7 +114,6 @@ export type IntentType =
   | "clarification_needed"
   | "exercise_variation";
 
-// Intent Detection Types
 export type WorkoutIntent = {
   type: IntentType;
   confidence: number;

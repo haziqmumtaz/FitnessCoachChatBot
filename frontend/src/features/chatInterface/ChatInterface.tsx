@@ -1,104 +1,48 @@
 import { useState, useRef, useEffect } from "react";
-import { chatApi } from "../api/chat";
-import type { ChatMessage } from "../types/api";
-import MarkdownRenderer from "./MarkdownRenderer";
-import ExerciseCard from "./ExerciseCard";
-import { condenseConversationHistory } from "../utils/conversationCondenser";
-import QuickActionButton from "./QuickActionButton";
+import type { ChatMessage, DetailedExercise } from "../../types/api";
+import MarkdownRenderer from "../../components/MarkdownRenderer";
+import ExerciseCard from "./components/ExerciseCard";
+import { condenseConversationHistory } from "../../utils/conversationCondenser";
+import QuickActionButton from "../../components/QuickActionButton";
+import { useChat, useModels } from "./api";
+import tyson from "../../assets/tyson_logo.png";
 
 interface ChatInterfaceProps {
   className?: string;
 }
 
 export const ChatInterface = ({ className }: ChatInterfaceProps) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<string>(
-    "openai/gpt-oss-120b"
-  );
-  const [availableModels, setAvailableModels] = useState<string[]>([]);
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  // Custom hooks for chat and models
+  const { messages, isLoading, error, sendMessage, clearChat } = useChat();
+
+  const { availableModels, selectedModel, setSelectedModel } = useModels();
 
   useEffect(() => {
-    const loadModels = async () => {
-      try {
-        const modelsData = await chatApi.getAvailableModels();
-        setAvailableModels(modelsData.models);
-        setSelectedModel(modelsData.defaultModel);
-      } catch (err) {
-        console.error("Failed to load models:", err);
-      }
-    };
-    loadModels();
-  }, []);
+    if (messages.length > 0 && messages[messages.length - 1].role === "user") {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
 
-    const userMessage: ChatMessage = {
-      role: "user",
-      content: inputValue.trim(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
+    await sendMessage(
+      inputValue.trim(),
+      selectedModel,
+      condenseConversationHistory(messages)
+    );
     setInputValue("");
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await chatApi.sendMessage({
-        message: inputValue.trim(),
-        model: selectedModel,
-        conversationHistory: condenseConversationHistory(messages),
-        sessionId: sessionId || undefined,
-      });
-
-      if (!sessionId && response.sessionId) {
-        setSessionId(response.sessionId);
-      }
-
-      const assistantMessage: ChatMessage = {
-        role: "assistant",
-        content: response.coachTalk,
-        detailedExercises: response.detailedExercises,
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message || err.message || "Failed to send message"
-      );
-
-      const errorMessage: ChatMessage = {
-        role: "assistant",
-        content:
-          "Sorry, I'm having trouble processing your request. Please try again.",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const clearChat = () => {
-    setMessages([]);
-    setSessionId(null);
-    setError(null);
   };
 
   const quickActions = [
-    "I want a 20 minute full body workout",
-    "Create a beginner's routine",
-    "Upper body exercise plan",
-    "What equipment do I need?",
+    "Create a 30-minute upper body workout.",
+    "Give me a 45-minute leg workout.",
+    "Make a 60-minute full body workout.",
+    "Plan a 20-minute ab workout.",
   ];
 
   const sendQuickMessage = (message: string) => {
@@ -122,61 +66,43 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
       <div
         style={{
           padding: "1.5rem 2rem",
-          backgroundColor: "white",
-          borderBottom: "1px solid #e5e5e5",
+          borderBottom: "1px solid #55E37A",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           flexShrink: 0,
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          width: "100vw",
+          backgroundColor: "white",
+          zIndex: 1000,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <div>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: "1.5rem",
-                fontWeight: "bold",
-                color: "#1a1a1a",
-                letterSpacing: "-0.025em",
-              }}
-            >
-              Tyson Training Coach
-            </h1>
-            <p
-              style={{
-                margin: 0,
-                fontSize: "0.875rem",
-                color: "#666666",
-                fontWeight: "normal",
-              }}
-            >
-              Your personal training assistant
-            </p>
+          <img
+            src={tyson}
+            alt="Tyson"
+            style={{ width: "100px", height: "50px", objectFit: "cover" }}
+          />
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div>
+              <h1
+                style={{
+                  margin: 0,
+                  fontSize: "1.5rem",
+                  fontWeight: "bold",
+                  color: "#1a1a1a",
+                  letterSpacing: "-0.025em",
+                }}
+              >
+                Tyson Workout Assistant
+              </h1>
+            </div>
           </div>
         </div>
-
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <select
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
-            style={{
-              backgroundColor: "white",
-              border: "1px solid #d1d5db",
-              borderRadius: "0.5rem",
-              color: "#374151",
-              padding: "0.5rem 0.75rem",
-              fontSize: "0.875rem",
-              cursor: "pointer",
-            }}
-          >
-            {availableModels?.map((model) => (
-              <option key={model} value={model}>
-                {model.replace("openai/", "").replace("gpt-", "GPT-")}
-              </option>
-            ))}
-          </select>
-
           <button
             onClick={clearChat}
             disabled={messages.length === 0}
@@ -189,19 +115,19 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
               alignItems: "center",
               gap: "0.5rem",
               transition: "all 0.2s",
-              backgroundColor: messages.length === 0 ? "#f3f4f6" : "#fef3c7",
+              backgroundColor: messages.length === 0 ? "#f3f4f6" : "#55E37A",
               color: messages.length === 0 ? "#9ca3af" : "#374151",
               border: "none",
               cursor: messages.length === 0 ? "not-allowed" : "pointer",
             }}
             onMouseEnter={(e) => {
               if (messages.length > 0) {
-                e.currentTarget.style.backgroundColor = "#fde68a";
+                e.currentTarget.style.backgroundColor = "#C3E906";
               }
             }}
             onMouseLeave={(e) => {
               if (messages.length > 0) {
-                e.currentTarget.style.backgroundColor = "#fef3c7";
+                e.currentTarget.style.backgroundColor = "#55E37A";
               }
             }}
           >
@@ -218,6 +144,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
+          paddingTop: "100px", // Add padding to account for fixed header
         }}
       >
         {/* Welcome message when no chat */}
@@ -233,9 +160,18 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
               padding: "2rem",
             }}
           >
-            <div style={{ textAlign: "center" }}>
+            <img
+              src={tyson}
+              alt="Tyson"
+              className="animate-slide-up-fade animate-delay-200"
+              style={{ width: "300px", height: "150px", objectFit: "cover" }}
+            />
+            <div
+              className="animate-slide-up-fade animate-delay-300"
+              style={{ textAlign: "center" }}
+            >
               <p style={{ transition: "0.5s" }}>Hi there!</p>
-              <p>I'm Tyson, your fitness coach assistant.</p>
+              <p>I'm Tyson, your workout assistant.</p>
               <p>How can I help?</p>
               <p
                 style={{
@@ -250,6 +186,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
 
             {/* Quick action buttons */}
             <div
+              className="animate-slide-up-fade animate-delay-400"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(2, 1fr)",
@@ -264,6 +201,9 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                   text={action}
                   onClick={() => sendQuickMessage(action)}
                   disabled={isLoading}
+                  className={`animate-slide-up-fade animate-delay-${
+                    500 + index * 100
+                  }`}
                 />
               ))}
             </div>
@@ -287,18 +227,17 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
             return (
               <div
                 key={index}
+                className="animate-slide-up-fade"
                 style={{
                   alignSelf:
                     message.role === "user" ? "flex-end" : "flex-start",
                   maxWidth: "80%",
+                  // animationDelay: `${index * 0.1}s`, // Stagger each message
                 }}
               >
                 <div
                   style={{
-                    background:
-                      message.role === "user"
-                        ? "rgba(59, 130, 246, 0.1)"
-                        : "white",
+                    background: message.role === "user" ? "#C3E906" : "white",
                     padding: "1rem 1.25rem",
                     borderRadius: "16px",
                     border:
@@ -343,11 +282,18 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                             }}
                           >
                             {message.detailedExercises.map(
-                              (exercise, index) => (
-                                <ExerciseCard
+                              (exercise: DetailedExercise, index: number) => (
+                                <div
                                   key={exercise.exerciseId || index}
-                                  exercise={exercise}
-                                />
+                                  className="animate-slide-up-fade"
+                                  style={
+                                    {
+                                      // animationDelay: `${(index + 1) * 0.1}s`, // Stagger exercise cards
+                                    }
+                                  }
+                                >
+                                  <ExerciseCard exercise={exercise} />
+                                </div>
                               )
                             )}
                           </div>
@@ -360,7 +306,14 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
           })}
 
           {isLoading && (
-            <div style={{ alignSelf: "flex-start", maxWidth: "80%" }}>
+            <div
+              className="animate-slide-up-fade"
+              style={{
+                alignSelf: "flex-start",
+                maxWidth: "80%",
+                // animationDelay: "0.1s", // Small delay for loading indicator
+              }}
+            >
               <div
                 style={{
                   background: "white",
@@ -400,9 +353,9 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
         </div>
       </div>
 
-      {/* Error Display */}
       {error && (
         <div
+          className="animate-slide-up-fade"
           style={{
             padding: "0.75rem 2rem",
             backgroundColor: "rgba(239, 68, 68, 0.1)",
@@ -412,21 +365,44 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
             display: "flex",
             alignItems: "center",
             gap: "0.5rem",
+            // animationDelay: "0.1s",
           }}
         >
           {error}
         </div>
       )}
 
-      {/* Input area */}
       <div
+        className="animate-slide-up-fade animate-delay-500"
         style={{
           padding: "1.5rem 2rem",
           backgroundColor: "white",
           borderTop: "1px solid rgba(0, 0, 0, 0.05)",
           flexShrink: 0,
+          display: "flex",
+          gap: "1rem",
+          alignItems: "center",
         }}
       >
+        <select
+          value={selectedModel}
+          onChange={(e) => setSelectedModel(e.target.value)}
+          style={{
+            backgroundColor: "white",
+            border: "0.5px solid #55E37A",
+            borderRadius: "0.5rem",
+            color: "#374151",
+            padding: "0.5rem 0.75rem",
+            fontSize: "0.875rem",
+            cursor: "pointer",
+          }}
+        >
+          {availableModels?.map((model) => (
+            <option key={model} value={model}>
+              {model}
+            </option>
+          ))}
+        </select>
         <form onSubmit={handleSubmit}>
           <div style={{ display: "flex", gap: "1rem", alignItems: "flex-end" }}>
             <input
@@ -443,11 +419,12 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                 color: "rgba(0, 0, 0, 0.8)",
                 padding: "0.875rem 1rem",
                 fontSize: "0.9rem",
+                width: "80vw",
                 outline: "none",
                 transition: "all 0.2s ease",
               }}
               onFocus={(e) => {
-                e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.5)";
+                e.currentTarget.style.borderColor = "#55E37A";
                 e.currentTarget.style.boxShadow =
                   "0 0 0 3px rgba(59, 130, 246, 0.1)";
               }}

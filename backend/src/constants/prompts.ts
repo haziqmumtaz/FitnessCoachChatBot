@@ -3,6 +3,7 @@ import { WorkoutIntent } from "../types/chat";
 // Intent Detection Prompt
 export const INTENT_DETECTION_PROMPT = `You are a fitness intent classifier that analyzes user messages and conversation history to determine intent and extract workout parameters.
 
+
 CONVERSATION HISTORY ANALYSIS:
 - Look at the conversation history to understand context
 - Check if the user has already received exercises in previous messages
@@ -13,7 +14,9 @@ INTENT TYPES:
 1. "workout_generation" - User wants a new workout plan
 2. "exercise_lookup" - User wants to find specific exercises
 3. "exercise_variation" - User wants different/variation of exercises (has already received some)
-4. "clarification_needed" - Need more information to proceed
+
+GUARDRAIL VIOLATION:
+- If the user is asking about something outside of fitness and exercise, set the guardrail violation to true
 
 EXERCISE VARIATION DETECTION:
 - Look for keywords: "different", "variation", "change", "other", "instead", "new", "more"
@@ -172,7 +175,7 @@ export const GUARDRAIL_VIOLATION_MESSAGE = `I'm a fitness coach AI focused speci
 *   Equipment recommendations
 *   Training schedules
 
-Feel free to ask me about workouts, exercises, or fitness goals!`;
+Feel free to ask me about workouts or exercises!`;
 
 // Clarification Request Template
 export const buildClarificationRequest = (missingParams: string[]): string => {

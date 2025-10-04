@@ -1,5 +1,9 @@
-import { http } from "./client";
-import type { ChatRequest, ChatResponse, AvailableModels } from "../types/api";
+import { http } from "../../../api/client";
+import type {
+  ChatRequest,
+  ChatResponse,
+  AvailableModels,
+} from "../../../types/api";
 
 export const chatApi = {
   // Send a chat message

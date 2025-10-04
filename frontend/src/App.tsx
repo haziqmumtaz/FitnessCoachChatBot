@@ -1,4 +1,4 @@
-import { ChatInterface } from "./components/ChatInterface";
+import { ChatInterface } from "./features/chatInterface/ChatInterface";
 import "./App.css";
 
 function App() {

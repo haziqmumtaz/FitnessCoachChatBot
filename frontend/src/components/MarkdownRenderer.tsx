@@ -4,13 +4,9 @@ import React from "react";
 
 interface MarkdownRendererProps {
   content: string;
-  style?: React.CSSProperties;
 }
 
-const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
-  content,
-  style,
-}) => {
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -145,7 +141,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         thead: ({ children }) => (
           <thead
             style={{
-              background: "rgba(59, 130, 246, 0.1)",
+              background: "#55E37A",
             }}
           >
             {children}
@@ -193,8 +189,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
             style={{
               margin: "0.75rem 0",
               padding: "0.75rem 1rem",
-              borderLeft: "4px solid rgba(59, 130, 246, 0.5)",
-              background: "rgba(59, 130, 246, 0.05)",
+              borderLeft: "4px solid #C3E906",
+              background: "#55E37A",
               borderRadius: "0.375rem",
               fontStyle: "italic",
               color: "rgba(0, 0, 0, 0.8)",
@@ -231,7 +227,6 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           </a>
         ),
       }}
-      style={style}
     >
       {content}
     </ReactMarkdown>

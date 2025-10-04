@@ -4,14 +4,17 @@ interface QuickActionButtonProps {
   text: string;
   onClick: () => void;
   disabled?: boolean;
+  className?: string;
 }
 
 const QuickActionButton: React.FC<QuickActionButtonProps> = ({
   text,
   onClick,
   disabled = false,
+  className,
 }) => (
   <button
+    className={className}
     onClick={onClick}
     disabled={disabled}
     style={{
