@@ -34,10 +34,23 @@ export type ChatResponse = {
   timestamp: string;
 };
 
+export type ModelInfo = {
+  id: string;
+  name: string;
+  provider: string;
+  description: string;
+  fitnessStrengths: string[];
+  speed: "Fast" | "Medium" | "Slow";
+  cost: "Low" | "Medium" | "High";
+  context: string;
+  bestFor: string;
+  limitations: string[];
+};
+
 export type AvailableModels = {
   models: string[];
   defaultModel: string;
-  timestamp: string;
+  modelInfo: Record<string, ModelInfo>;
 };
 
 export type StreamEventType =

@@ -142,9 +142,19 @@ export type IntentDetectionResponse = {
   guardrail: Guardrail;
 };
 
+export type ModelInfo = {
+  id: string;
+  name: string;
+  provider: string;
+  description: string;
+  fitnessStrengths: string[];
+  bestFor: string;
+};
+
 export type AvailableModels = {
   models: string[];
   defaultModel: string;
+  modelInfo: Record<string, ModelInfo>;
 };
 
 export type StreamEventType =

@@ -56,7 +56,6 @@ export class ChatService implements IChatService {
       }
 
       const intentDetection = intentResult;
-      console.log("Intent detection:", intentDetection);
 
       if (intentDetection.guardrail.violation) {
         return success(await this.handleGuardrailViolation(sessionId));

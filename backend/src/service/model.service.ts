@@ -1,10 +1,11 @@
 import { injectable } from "inversify";
 import OpenAI from "openai";
 import config from "../config";
-import { Model, modelConfigs } from "../constants/models";
+import { Model, modelConfigs, ModelConfig } from "../constants/models";
 import {
   AvailableModels,
   ChatMessage,
+  ModelInfo,
   ModelProviderOptions,
   ModelProviderResponse,
 } from "../types/chat";
@@ -16,13 +17,6 @@ export interface IModelProvider {
     options?: ModelProviderOptions
   ): Promise<Result<ModelProviderResponse>>;
   getAvailableModels(): Promise<Result<AvailableModels>>;
-}
-
-interface ModelConfig {
-  name: string;
-  provider: string;
-  baseURL?: string;
-  apiKey: string;
 }
 
 @injectable()
@@ -38,7 +32,7 @@ export class ModelProvider implements IModelProvider {
     options?: ModelProviderOptions
   ): Promise<Result<ModelProviderResponse>> {
     try {
-      const modelName = options?.model || config.defaultModel;
+      const modelName = options?.model;
       const modelConfig = this.modelConfigs[modelName as Model];
 
       if (!modelConfig) {
@@ -107,10 +101,20 @@ export class ModelProvider implements IModelProvider {
 
   async getAvailableModels(): Promise<Result<AvailableModels>> {
     try {
-      const models = Object.keys(this.modelConfigs) as Model[];
+      const models = Object.keys(this.modelConfigs).filter(
+        (model) => this.modelConfigs[model as Model].showInDropdown
+      ) as Model[];
+
+      // Create model info record for all models (including those not in dropdown)
+      const modelInfo: Record<string, ModelInfo> = {};
+      Object.entries(this.modelConfigs).forEach(([modelId, config]) => {
+        modelInfo[modelId] = config.info;
+      });
+
       const result: AvailableModels = {
         models,
-        defaultModel: config.defaultModel,
+        defaultModel: models[0],
+        modelInfo,
       };
       return success(result);
     } catch (error: any) {
