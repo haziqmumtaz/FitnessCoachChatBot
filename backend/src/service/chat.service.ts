@@ -54,7 +54,6 @@ export class ChatService implements IChatService {
       }
 
       const intentDetection = intentResult;
-      console.log("Intent detection:", intentDetection);
 
       if (intentDetection.guardrail.violation) {
         return success(await this.handleGuardrailViolation(sessionId));
@@ -66,8 +65,6 @@ export class ChatService implements IChatService {
         sessionId,
         intentDetection.intent
       );
-
-      console.log(workoutResult);
 
       if ("error" in workoutResult) {
         return failure(

@@ -166,7 +166,7 @@ export const buildFinalResponsePrompt = (intent: WorkoutIntent): string => {
 };
 
 // Guardrail Violation Message
-export const GUARDRAIL_VIOLATION_MESSAGE = `I'm a fitness coach AI focused specifically on exercise guidance and workout plans. I can't help with topics outside of workout and exercise.
+export const GUARDRAIL_VIOLATION_MESSAGE = `Sorry I could not process your request as I'm a fitness coach AI focused specifically on exercise guidance and workout plans. I can't help with topics outside of workout and exercise.
 
 **I can help you with:**
 

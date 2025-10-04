@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Header } from "../../components/Header";
+import { ModelSelectionModal } from "../../components/ModelSelectionModal";
 import { condenseConversationHistory } from "../../utils/conversationCondenser";
 import { useChat, useModels } from "./api";
 import { MessagesSection } from "./components/MessagesSection";
@@ -12,11 +13,18 @@ interface ChatInterfaceProps {
 export const ChatInterface = ({ className }: ChatInterfaceProps) => {
   const [inputValue, setInputValue] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [isModelModalOpen, setIsModelModalOpen] = useState(false);
 
   // Custom hooks for chat and models
   const { messages, isLoading, sendMessage, clearChat } = useChat();
 
-  const { availableModels, selectedModel, setSelectedModel } = useModels();
+  const {
+    selectedModel,
+    setSelectedModel,
+    modelInfo,
+    isLoading: modelsLoading,
+    error: modelsError,
+  } = useModels();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -45,6 +53,15 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
     setInputValue(message);
   };
 
+  const handleModelSelect = (modelId: string) => {
+    setSelectedModel(modelId);
+    setIsModelModalOpen(false);
+  };
+
+  const handleModelDropdownClick = () => {
+    setIsModelModalOpen(true);
+  };
+
   return (
     <div
       className={className}
@@ -68,7 +85,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          paddingTop: isMobile ? "70px" : "100px", // Responsive padding
+          paddingTop: isMobile ? "70px" : "100px",
         }}
       >
         {/* Welcome message when no chat */}
@@ -102,27 +119,6 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
           flexDirection: isMobile ? "column" : "row",
         }}
       >
-        <select
-          value={selectedModel}
-          onChange={(e) => setSelectedModel(e.target.value)}
-          style={{
-            backgroundColor: "white",
-            border: "0.5px solid #55E37A",
-            borderRadius: "0.5rem",
-            color: "#374151",
-            justifyContent: isMobile ? "start" : "center",
-            padding: "0.5rem 0.75rem",
-            fontSize: isMobile ? "0.75rem" : "0.875rem",
-            cursor: "pointer",
-            width: "auto",
-          }}
-        >
-          {availableModels?.map((model) => (
-            <option key={model} value={model}>
-              {model}
-            </option>
-          ))}
-        </select>
         <form
           onSubmit={handleSubmit}
           style={{ flex: 1, width: isMobile ? "100%" : "auto" }}
@@ -130,81 +126,175 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
           <div
             style={{
               display: "flex",
-              gap: "1rem",
-              alignItems: "flex-end",
+              flexDirection: "column",
+              gap: "0.75rem",
               width: "100%",
             }}
           >
-            <input
-              type="text"
+            <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Send a message..."
+              placeholder={
+                isLoading
+                  ? "Tyson is thinking..."
+                  : "Ask Tyson for workout help..."
+              }
               disabled={isLoading}
+              rows={3}
               style={{
                 flex: 1,
-                background: "rgba(0, 0, 0, 0.02)",
-                border: "1px solid rgba(0, 0, 0, 0.1)",
-                borderRadius: "24px",
-                color: "rgba(0, 0, 0, 0.8)",
-                padding: isMobile ? "0.75rem 1rem" : "0.875rem 1rem",
+                background: isLoading
+                  ? "rgba(0, 0, 0, 0.05)"
+                  : "rgba(0, 0, 0, 0.02)",
+                border: isLoading
+                  ? "1px solid rgba(0, 0, 0, 0.15)"
+                  : "1px solid rgba(0, 0, 0, 0.1)",
+                borderRadius: "12px",
+                color: isLoading ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0.8)",
+                padding: isMobile ? "0.75rem 1rem" : "1rem 1.25rem",
                 fontSize: isMobile ? "0.875rem" : "0.9rem",
                 minWidth: 0,
                 outline: "none",
                 transition: "all 0.2s ease",
+                resize: "vertical",
+                minHeight: "60px",
+                maxHeight: "120px",
+                fontFamily: "inherit",
+                lineHeight: "1.5",
+                cursor: isLoading ? "not-allowed" : "text",
               }}
               onFocus={(e) => {
-                e.currentTarget.style.borderColor = "#55E37A";
-                e.currentTarget.style.boxShadow =
-                  "0 0 0 3px rgba(59, 130, 246, 0.1)";
+                if (!isLoading) {
+                  e.currentTarget.style.borderColor = "#55E37A";
+                  e.currentTarget.style.boxShadow =
+                    "0 0 0 3px rgba(85, 227, 122, 0.1)";
+                }
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = "rgba(0, 0, 0, 0.1)";
+                e.currentTarget.style.borderColor = isLoading
+                  ? "rgba(0, 0, 0, 0.15)"
+                  : "rgba(0, 0, 0, 0.1)";
                 e.currentTarget.style.boxShadow = "none";
               }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e as any);
+                }
+              }}
             />
-            <button
-              type="submit"
-              disabled={!inputValue.trim() || isLoading}
+            <div
               style={{
-                background:
-                  isLoading || !inputValue.trim()
-                    ? "rgba(0, 0, 0, 0.4)"
-                    : "rgba(63, 50, 50, 0.8)",
-                border: "none",
-                borderRadius: "50%",
-                color: "white",
-                width: isMobile ? "40px" : "48px",
-                height: isMobile ? "40px" : "48px",
-                fontSize: isMobile ? "16px" : "18px",
-                cursor:
-                  isLoading || !inputValue.trim() ? "not-allowed" : "pointer",
-                opacity: isLoading || !inputValue.trim() ? 0.5 : 1,
-                transition: "all 0.2s ease",
                 display: "flex",
+                justifyContent: "space-between",
                 alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
+                flexDirection: isMobile ? "column" : "row",
               }}
             >
-              {isLoading ? (
-                <div
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  color: "rgba(0, 0, 0, 0.5)",
+                  flexDirection: "row",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <p>
+                  <span>Selected AI Model: {selectedModel}.</span>
+                </p>
+                <p
                   style={{
-                    width: "16px",
-                    height: "16px",
-                    border: "2px solid rgba(255, 255, 255, 0.3)",
-                    borderTop: "2px solid white",
-                    borderRadius: "50%",
-                    animation: "spin 1s linear infinite",
+                    cursor: "pointer",
                   }}
-                ></div>
-              ) : (
-                "↗"
-              )}
-            </button>
+                  onClick={handleModelDropdownClick}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#f0f9ff";
+                    e.currentTarget.style.borderColor = "#C3E906";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "white";
+                    e.currentTarget.style.borderColor = "#55E37A";
+                  }}
+                >
+                  <span style={{ fontWeight: "bold", color: "#55E37A" }}>
+                    Change?
+                  </span>
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={!inputValue.trim() || isLoading}
+                style={{
+                  background:
+                    isLoading || !inputValue.trim()
+                      ? "rgba(0, 0, 0, 0.4)"
+                      : "#55E37A",
+                  border: "none",
+                  borderRadius: "8px",
+                  color:
+                    isLoading || !inputValue.trim()
+                      ? "rgba(255, 255, 255, 0.6)"
+                      : "#111827",
+                  padding: "0.5rem 1rem",
+                  fontSize: "0.875rem",
+                  fontWeight: "600",
+                  cursor:
+                    isLoading || !inputValue.trim() ? "not-allowed" : "pointer",
+                  opacity: isLoading || !inputValue.trim() ? 0.5 : 1,
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isLoading && inputValue.trim()) {
+                    e.currentTarget.style.backgroundColor = "#C3E906";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isLoading && inputValue.trim()) {
+                    e.currentTarget.style.backgroundColor = "#55E37A";
+                  }
+                }}
+              >
+                {isLoading ? (
+                  <>
+                    <div
+                      style={{
+                        width: "12px",
+                        height: "12px",
+                        border: "2px solid rgba(255, 255, 255, 0.3)",
+                        borderTop: "2px solid white",
+                        borderRadius: "50%",
+                        animation: "spin 1s linear infinite",
+                      }}
+                    ></div>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    Send
+                    <span style={{ fontSize: "0.75rem" }}>↗</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>
+
+      <ModelSelectionModal
+        isOpen={isModelModalOpen}
+        onClose={() => setIsModelModalOpen(false)}
+        onSelectModel={handleModelSelect}
+        currentModel={selectedModel}
+        modelInfo={modelInfo}
+        isLoading={modelsLoading}
+        error={modelsError}
+      />
 
       <style>{`
         @keyframes spin {

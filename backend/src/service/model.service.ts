@@ -5,6 +5,7 @@ import { Model, modelConfigs, ModelConfig } from "../constants/models";
 import {
   AvailableModels,
   ChatMessage,
+  ModelInfo,
   ModelProviderOptions,
   ModelProviderResponse,
 } from "../types/chat";
@@ -103,9 +104,17 @@ export class ModelProvider implements IModelProvider {
       const models = Object.keys(this.modelConfigs).filter(
         (model) => this.modelConfigs[model as Model].showInDropdown
       ) as Model[];
+
+      // Create model info record for all models (including those not in dropdown)
+      const modelInfo: Record<string, ModelInfo> = {};
+      Object.entries(this.modelConfigs).forEach(([modelId, config]) => {
+        modelInfo[modelId] = config.info;
+      });
+
       const result: AvailableModels = {
         models,
         defaultModel: models[0],
+        modelInfo,
       };
       return success(result);
     } catch (error: any) {
