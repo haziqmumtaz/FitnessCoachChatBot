@@ -60,12 +60,6 @@ export class ChatService implements IChatService {
         return success(await this.handleGuardrailViolation(sessionId));
       }
 
-      if (intentDetection.intent.type == "clarification_needed") {
-        return success(
-          await this.handleClarification(sessionId, intentDetection.intent)
-        );
-      }
-
       // STEP 4: Structured workout generation flow
       const workoutResult = await this.handleWorkoutGeneration(
         request,
