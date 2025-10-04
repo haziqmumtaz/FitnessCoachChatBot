@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import OpenAI from "openai";
 import config from "../config";
-import { Model, modelConfigs } from "../constants/models";
+import { Model, modelConfigs, ModelConfig } from "../constants/models";
 import {
   AvailableModels,
   ChatMessage,
@@ -16,13 +16,6 @@ export interface IModelProvider {
     options?: ModelProviderOptions
   ): Promise<Result<ModelProviderResponse>>;
   getAvailableModels(): Promise<Result<AvailableModels>>;
-}
-
-interface ModelConfig {
-  name: string;
-  provider: string;
-  baseURL?: string;
-  apiKey: string;
 }
 
 @injectable()
@@ -107,7 +100,9 @@ export class ModelProvider implements IModelProvider {
 
   async getAvailableModels(): Promise<Result<AvailableModels>> {
     try {
-      const models = Object.keys(this.modelConfigs) as Model[];
+      const models = Object.keys(this.modelConfigs).filter(
+        (model) => this.modelConfigs[model as Model].showInDropdown
+      ) as Model[];
       const result: AvailableModels = {
         models,
         defaultModel: config.defaultModel,
