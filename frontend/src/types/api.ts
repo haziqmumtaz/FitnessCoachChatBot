@@ -39,3 +39,16 @@ export type AvailableModels = {
   defaultModel: string;
   timestamp: string;
 };
+
+export type StreamEventType =
+  | "intent_detected"
+  | "tools_calling"
+  | "tools_executed"
+  | "final_response"
+  | "error";
+
+export type StreamEvent = {
+  type: StreamEventType;
+  data: any;
+  sessionId: string;
+};

@@ -6,6 +6,7 @@ import {
   ChatResponse,
   DetailedExercise,
   WorkoutIntent,
+  StreamEvent,
 } from "../types/chat";
 import { TYPES } from "../types/di";
 import { IIntentService } from "./intent.service";
@@ -22,6 +23,7 @@ import {
 
 export interface IChatService {
   chat(request: ChatRequest): Promise<Result<ChatResponse>>;
+  chatStream(request: ChatRequest): AsyncGenerator<StreamEvent, void, unknown>;
 }
 
 @injectable()
@@ -230,5 +232,205 @@ export class ChatService implements IChatService {
       model: "fallback",
       sessionId,
     };
+  }
+
+  async *chatStream(
+    request: ChatRequest
+  ): AsyncGenerator<StreamEvent, void, unknown> {
+    try {
+      const sessionId = request.sessionId || this.generateSessionId();
+
+      // Step 1: Intent Detection
+      yield {
+        type: "intent_detected",
+        data: { message: "Analyzing your request..." },
+        sessionId,
+      };
+
+      const intentResult = await this.intentService.detectIntent(
+        request.message,
+        request.conversationHistory
+      );
+
+      if ("error" in intentResult) {
+        yield {
+          type: "error",
+          data: {
+            message: "Failed to detect intent",
+            error: intentResult.error,
+          },
+          sessionId,
+        };
+        return;
+      }
+
+      const intentDetection = intentResult;
+      console.log("Intent detection:", intentDetection);
+
+      if (intentDetection.guardrail.violation) {
+        yield {
+          type: "final_response",
+          data: {
+            coachTalk: GUARDRAIL_VIOLATION_MESSAGE,
+            model: "guardrail",
+            sessionId,
+          },
+          sessionId,
+        };
+        return;
+      }
+
+      // Step 2: Tool Calling (if needed)
+      if (intentDetection.shouldCallTools) {
+        yield {
+          type: "tools_calling",
+          data: { message: "Searching for exercises..." },
+          sessionId,
+        };
+      }
+
+      // Step 3: Workout Generation
+      const workoutResult = await this.handleWorkoutGenerationStream(
+        request,
+        sessionId,
+        intentDetection.intent
+      );
+
+      if ("error" in workoutResult) {
+        yield {
+          type: "error",
+          data: {
+            message: "Failed to generate workout",
+            error: workoutResult.error,
+          },
+          sessionId,
+        };
+        return;
+      }
+
+      // Step 4: Final Response
+      yield {
+        type: "final_response",
+        data: workoutResult,
+        sessionId,
+      };
+    } catch (error: any) {
+      console.error("Chat stream error:", error);
+      yield {
+        type: "error",
+        data: {
+          message: "Internal chat service error",
+          error: error.message,
+        },
+        sessionId: request.sessionId || this.generateSessionId(),
+      };
+    }
+  }
+
+  private async handleWorkoutGenerationStream(
+    request: ChatRequest,
+    sessionId: string,
+    intent: WorkoutIntent
+  ): Promise<Result<ChatResponse>> {
+    try {
+      const workoutPrompt = buildStructuredWorkoutPrompt(intent);
+
+      const messages: ChatMessage[] = [
+        { role: "system", content: workoutPrompt },
+        ...(request.conversationHistory || []),
+        { role: "user", content: request.message },
+      ];
+
+      const availableTools = this.toolService.getAvailableTools();
+
+      // Get response from model provider with tools
+      const modelResponse = await this.modelProvider.chat(messages, {
+        temperature: 0.7,
+        maxTokens: 1000,
+        model: request.model,
+        tools: availableTools,
+        toolChoice: "auto",
+      });
+
+      if ("error" in modelResponse) {
+        return failure(
+          "Failed to get model response",
+          "MODEL_ERROR",
+          modelResponse.error
+        );
+      }
+
+      if (modelResponse.toolCalls && modelResponse.toolCalls.length > 0) {
+        const toolResults = await this.toolService.processToolCalls(
+          modelResponse.toolCalls
+        );
+
+        for (const toolResult of toolResults) {
+          messages.push({
+            role: "assistant",
+            content: `Here are the exercise results:\n${JSON.stringify(
+              toolResult.result,
+              null,
+              2
+            )}`,
+          });
+        }
+
+        // Get final structured response after tool execution
+        const finalResponse = await this.modelProvider.chat(
+          [
+            { role: "system", content: buildFinalResponsePrompt(intent) },
+            ...messages.slice(1), // Skip the original system prompt
+          ],
+          {
+            temperature: 0.5,
+            maxTokens: 800,
+            model: request.model,
+          }
+        );
+
+        if ("error" in finalResponse) {
+          return failure(
+            "Failed to get final response",
+            "FINAL_RESPONSE_ERROR",
+            finalResponse.error
+          );
+        }
+
+        const coachTalk = finalResponse.content;
+
+        // Extract detailed exercises from tool results
+        const detailedExercises: DetailedExercise[] = [];
+        for (const toolResult of toolResults) {
+          if (toolResult.result && Array.isArray(toolResult.result)) {
+            detailedExercises.push(...toolResult.result);
+          }
+        }
+
+        return success({
+          detailedExercises,
+          coachTalk,
+          model: finalResponse.model,
+          sessionId,
+        });
+      }
+
+      // If no tool calls, return direct response
+      const coachTalk = modelResponse.content;
+
+      return success({
+        detailedExercises: [], // No exercises when no tool calls
+        coachTalk,
+        model: modelResponse.model,
+        sessionId,
+      });
+    } catch (error: any) {
+      console.error("Workout generation error:", error);
+      return failure(
+        "Workout generation failed",
+        "WORKOUT_ERROR",
+        error.message
+      );
+    }
   }
 }

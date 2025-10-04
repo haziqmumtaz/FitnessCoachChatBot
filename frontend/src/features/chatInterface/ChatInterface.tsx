@@ -17,7 +17,14 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Custom hooks for chat and models
-  const { messages, isLoading, error, sendMessage, clearChat } = useChat();
+  const {
+    messages,
+    isLoading,
+    error,
+    streamingStatus,
+    sendMessageStream,
+    clearChat,
+  } = useChat();
 
   const { availableModels, selectedModel, setSelectedModel } = useModels();
 
@@ -42,7 +49,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
 
-    await sendMessage(
+    await sendMessageStream(
       inputValue.trim(),
       selectedModel,
       condenseConversationHistory(messages)
@@ -389,7 +396,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                       animation: "spin 1s linear infinite",
                     }}
                   ></div>
-                  Tyson is thinking...
+                  {streamingStatus || "Tyson is thinking..."}
                 </div>
               </div>
             </div>
