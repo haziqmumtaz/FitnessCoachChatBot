@@ -31,7 +31,7 @@ export class ModelProvider implements IModelProvider {
     options?: ModelProviderOptions
   ): Promise<Result<ModelProviderResponse>> {
     try {
-      const modelName = options?.model || config.defaultModel;
+      const modelName = options?.model;
       const modelConfig = this.modelConfigs[modelName as Model];
 
       if (!modelConfig) {
